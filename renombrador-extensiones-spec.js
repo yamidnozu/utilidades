@@ -26,6 +26,16 @@ function loadGitignore(directory) {
  * @param {string} directory - Directorio a recorrer para renombrar archivos.
  */
 function renameSpecFiles(directory) {
+    const nombrequeesta = '.specListo.ts';
+    const nombrequequiero = '.spec.ts';
+    // const nombrequeesta = '.spec.ts';
+    // const nombrequequiero = '.specListo.ts';
+
+    // const nombrequeesta = '.spec.ts';
+    // const nombrequequiero = '.spec☢️.ts';
+    // const nombrequeesta = '.spec☢️.ts';
+    // const nombrequequiero = '.spec.ts';
+    
     fs.readdir(directory, { withFileTypes: true }, (err, files) => {
         if (err) {
             console.error(err);
@@ -45,8 +55,8 @@ function renameSpecFiles(directory) {
                 renameSpecFiles(fullPath);
             } else {
                 // Si es un archivo y termina en '.spec.ts', lo renombra a '.spec.ts'
-                if (file.name.endsWith('.spec.ts')) {
-                    const newFileName = file.name.replace('.spec.ts', '.specx.ts');
+                if (file.name.endsWith(nombrequeesta)) {
+                    const newFileName = file.name.replace(nombrequeesta, nombrequequiero);
                     const newFullPath = path.join(directory, newFileName);
 
                     fs.rename(fullPath, newFullPath, err => {
@@ -61,11 +71,51 @@ function renameSpecFiles(directory) {
         });
     });
 }
+/**
+ * Recorre recursivamente un directorio para contar todos los archivos que contienen 'spec' en su nombre.
+ * 
+ * @param {string} directory - Directorio a recorrer.
+ * @param {Object} countMap - Mapa para llevar la cuenta de cada tipo de archivo.
+ */
+function countSpecFiles(directory, countMap = {}) {
+    fs.readdir(directory, { withFileTypes: true }, (err, files) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        files.forEach(file => {
+            
+            const fullPath = path.join(directory, file.name);
+
+            if (ig.ignores(fullPath.replace(/^.\//, ''))) {
+                return;
+            }
+
+            if (file.isDirectory()) {
+                countSpecFiles(fullPath, countMap); // Recursividad para directorios
+            } else {
+                const match = file.name.match(/(.*)\.spec(.*)\..*$/i);
+                if (match) {
+                    const prefix = match[1] || '';
+                    const suffix = match[2] || '';
+                    const specPattern = `.spec${suffix}`;
+                    countMap[specPattern] = (countMap[specPattern] || 0) + 1;
+                }
+            }
+        });
+        
+        if (path.resolve(directory) === path.resolve('.')) {
+            console.log('Count of spec files:', countMap);
+        }
+        console.log( countMap);
+    });
+}
 
 // Carga .gitignore desde el directorio actual y empieza el proceso
 loadGitignore('.');
 renameSpecFiles('.');
-
+countSpecFiles('.'); 
 /*
  * Ejemplo de uso:
  * Este script se debe ejecutar en la raíz de un proyecto donde se desea renombrar archivos de test.

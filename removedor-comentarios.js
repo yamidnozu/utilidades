@@ -13,7 +13,7 @@ const path = require('path');
 
 /**
  * Añade un salto de línea entre las declaraciones de métodos en un contenido de archivo.
- * 
+ *
  * @param {string} content - El contenido del archivo a procesar.
  * @returns {string} El contenido procesado con saltos de línea adicionales entre métodos.
  */
@@ -34,13 +34,15 @@ function addLineBetweenMethods(content) {
 
 /**
  * Elimina los comentarios y reduce los saltos de línea innecesarios en el contenido del archivo.
- * 
+ *
  * @param {string} content - El contenido del archivo a procesar.
  * @returns {string} El contenido procesado sin comentarios y con saltos de línea reducidos.
  */
 function removeCommentsAndExtraLines(content) {
+    // Elimina comentarios de línea
+    let noComments = content.replace(/\/\/.*/g, '');
     // Elimina comentarios de línea y bloque
-    let noComments = content.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
+    // let noComments = content.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
 
     // Reduce los saltos de línea múltiples a un solo salto de línea
     // y mantiene la indentación del código
@@ -55,7 +57,7 @@ function removeCommentsAndExtraLines(content) {
 
 /**
  * Procesa un archivo eliminando los comentarios y ajustando los saltos de línea.
- * 
+ *
  * @param {string} filePath - La ruta del archivo a procesar.
  */
 function processFile(filePath) {
@@ -94,4 +96,3 @@ if (!fs.existsSync(filePath)) {
 
 // Ejecuta el procesamiento del archivo
 processFile(filePath);
-
