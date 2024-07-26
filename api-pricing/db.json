@@ -1,0 +1,7 @@
+{
+  "categorias": [],
+  "configuraciones": {
+    "/api/v1/ch-ms-category-management-pricing/create-category": "success",
+    "/api/v1/ch-ms-category-management-pricing/categories": "error"
+  }
+}

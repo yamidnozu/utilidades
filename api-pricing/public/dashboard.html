@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control API de Pricing</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center text-blue-600">Panel de Control API de Pricing</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Configuraciones</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoCrearCategoria">Crear Categoría:</label>
+                        <select id="estadoCrearCategoria" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoListarCategorias">Listar Categorías:</label>
+                        <select id="estadoListarCategorias" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="error">Error</option>
+                            <option value="empty">Vacío</option>
+                        </select>
+                    </div>
+                    <button id="guardarConfiguraciones" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Guardar Configuraciones
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Crear Categoría</h2>
+                <div class="space-y-4">
+                    <input id="nombreCategoria" type="text" placeholder="Nombre de Categoría" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="descripcionCategoria" type="text" placeholder="Descripción de Categoría" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <button id="crearCategoria" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Crear Categoría
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
+            <h2 class="text-xl font-semibold mb-4">Listar Categorías</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <input id="buscarNombreCategoria" type="text" placeholder="Buscar por Nombre de Categoría" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                <input id="buscarNombreOpcion" type="text" placeholder="Buscar por Nombre de Opción" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                <select id="ordenarPor" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <option value="categoryName">Ordenar por Nombre</option>
+                    <option value="categoryCode">Ordenar por Código</option>
+                </select>
+            </div>
+            <button id="buscarCategorias" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Buscar
+            </button>
+            <div id="listaCategorias" class="mt-4"></div>
+        </div>
+
+        <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
+            <h2 class="text-xl font-semibold mb-4">Validar Nombre de Categoría</h2>
+            <div class="flex space-x-4">
+                <input id="validarNombreCategoria" type="text" placeholder="Nombre de Categoría a Validar" class="flex-grow px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                <button id="validarCategoria" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Validar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Configuración de toastr
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
+
+    // Funciones
+    async function guardarConfiguraciones() {
+        const configuraciones = {
+            '/api/v1/ch-ms-category-management-pricing/create-category': document.getElementById('estadoCrearCategoria').value,
+            '/api/v1/ch-ms-category-management-pricing/categories': document.getElementById('estadoListarCategorias').value
+        };
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(configuraciones)
+            });
+            if (response.ok) {
+                toastr.success('Configuraciones guardadas exitosamente');
+            } else {
+                toastr.error('Error al guardar las configuraciones');
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function crearCategoria() {
+        const nombre = document.getElementById('nombreCategoria').value;
+        const descripcion = document.getElementById('descripcionCategoria').value;
+        try {
+            const response = await fetch('/api/v1/ch-ms-category-management-pricing/create-category', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    data: {
+                        type: "PRICINGCREATECATEGORYRQ",
+                        id: crypto.randomUUID(),
+                        attributes: {
+                            timestamp: new Date().toISOString(),
+                            appId: "ADL",
+                            appModule: "002-1",
+                            param: {
+                                create: {
+                                    name: nombre,
+                                    description: descripcion,
+                                    optionList: []
+                                }
+                            }
+                        }
+                    }
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success(result.meta.message);
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function listarCategorias() {
+        const nombreCategoria = document.getElementById('buscarNombreCategoria').value;
+        const nombreOpcion = document.getElementById('buscarNombreOpcion').value;
+        const ordenarPor = document.getElementById('ordenarPor').value;
+        try {
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/categories?categoryName=${nombreCategoria}&optionName=${nombreOpcion}&sortBy=${ordenarPor}`);
+            const result = await response.json();
+            
+            const listaCategorias = document.getElementById('listaCategorias');
+            listaCategorias.innerHTML = '';
+            
+            if (result.errors) {
+                toastr.warning(result.errors[0].message);
+                return;
+            }
+            
+            result.transactionResponse.response.attributes.result.categoryList.forEach(categoria => {
+                const categoriaDiv = document.createElement('div');
+                categoriaDiv.className = 'bg-gray-100 p-4 mb-4 rounded';
+                categoriaDiv.innerHTML = `
+                    <h3 class="font-bold">${categoria.categoryName}</h3>
+                    <p class="text-sm text-gray-600">${categoria.categoryDescription}</p>
+                    <p class="text-sm">Código: ${categoria.categoryCode}</p>
+                    <p class="text-sm">Opciones: ${categoria.categoryOptionsCount}</p>
+                `;
+                listaCategorias.appendChild(categoriaDiv);
+            });
+        } catch (error) {
+            toastr.error('Error al listar las categorías');
+        }
+    }
+
+    async function validarNombreCategoria() {
+        const nombreCategoria = document.getElementById('validarNombreCategoria').value;
+        try {
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/validate-category-name?categoryName=${nombreCategoria}`);
+            const result = await response.json();
+            
+            if (result.errors) {
+                toastr.error(result.errors[0].message);
+            } else {
+                toastr.success(result.transactionResponse.response.attributes.result.description);
+            }
+        } catch (error) {
+            toastr.error('Error al validar el nombre de la categoría');
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('guardarConfiguraciones').addEventListener('click', guardarConfiguraciones);
+    document.getElementById('crearCategoria').addEventListener('click', crearCategoria);
+    document.getElementById('buscarCategorias').addEventListener('click', listarCategorias);
+    document.getElementById('validarCategoria').addEventListener('click', validarNombreCategoria);
+
+    // Cargar configuraciones iniciales
+    fetch('/api/settings').then(response => response.json()).then(configuraciones => {
+        document.getElementById('estadoCrearCategoria').value = configuraciones['/api/v1/ch-ms-category-management-pricing/create-category'] || 'success';
+        document.getElementById('estadoListarCategorias').value = configuraciones['/api/v1/ch-ms-category-management-pricing/categories'] || 'success';
+    });
+    </script>
+</body>
+</html>
