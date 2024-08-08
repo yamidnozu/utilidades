@@ -1,7 +1,217 @@
 {
-  "categorias": [],
+  "categorias": [
+    {
+      "categoryId": 1,
+      "categoryCode": "CAT001",
+      "categoryName": "Factura",
+      "categoryDescription": "Factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 1,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        }
+      ]
+    },
+    {
+      "categoryId": 2,
+      "categoryCode": "CAT002",
+      "categoryName": "Factura 1",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 2,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 3,
+      "categoryCode": "CAT003",
+      "categoryName": "Factura 2",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 3,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 4,
+      "categoryCode": "CAT004",
+      "categoryName": "Factura 3",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 4,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 5,
+      "categoryCode": "CAT005",
+      "categoryName": "Factura 4",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 5,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 6,
+      "categoryCode": "CAT006",
+      "categoryName": "Factura 5",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 6,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 7,
+      "categoryCode": "CAT007",
+      "categoryName": "Factura 6",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 7,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 8,
+      "categoryCode": "CAT008",
+      "categoryName": "Factura 7",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 8,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 9,
+      "categoryCode": "CAT009",
+      "categoryName": "Factura 8",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 9,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 10,
+      "categoryCode": "CAT010",
+      "categoryName": "Factura 9",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 10,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 11,
+      "categoryCode": "CAT011",
+      "categoryName": "Factura 10",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 11,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 12,
+      "categoryCode": "CAT012",
+      "categoryName": "Arroz",
+      "categoryDescription": "Con pollo es lo mas delicioso",
+      "categoryOptionsCount": 2,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 12,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        },
+        {
+          "optionId": 13,
+          "optionCode": "TX009",
+          "optionName": "Pago de Crédito"
+        }
+      ]
+    },
+    {
+      "categoryId": 13,
+      "categoryCode": "CAT013",
+      "categoryName": "cad",
+      "categoryDescription": "asd",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 14,
+          "optionCode": "TX016",
+          "optionName": "Pago de Internet"
+        }
+      ]
+    },
+    {
+      "categoryId": 14,
+      "categoryCode": "CAT014",
+      "categoryName": "asd",
+      "categoryDescription": "423",
+      "categoryOptionsCount": 0,
+      "categoryAssignedPlan": null,
+      "optionsList": []
+    }
+  ],
   "configuraciones": {
     "/api/v1/ch-ms-category-management-pricing/create-category": "success",
-    "/api/v1/ch-ms-category-management-pricing/categories": "error"
+    "/api/v1/ch-ms-category-management-pricing/categories": "success"
   }
 }

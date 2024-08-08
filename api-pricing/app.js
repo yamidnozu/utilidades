@@ -2,15 +2,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const cors = require('cors');
 
 const app = express();
 const puerto = 3000;
 
+app.use(cors()); 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Operaciones de base de datos
 const rutaDb = path.join(__dirname, 'db.json');
 
 async function leerDb() {
@@ -26,7 +26,6 @@ async function escribirDb(datos) {
   await fs.writeFile(rutaDb, JSON.stringify(datos, null, 2));
 }
 
-// Middleware para simular errores según la configuración
 async function simularErrores(req, res, next) {
   const db = await leerDb();
   const { path } = req;
@@ -61,13 +60,10 @@ async function simularErrores(req, res, next) {
 
 app.use(simularErrores);
 
-// Endpoints del API
-
-// Crear categoría
 app.post('/api/v1/ch-ms-category-management-pricing/create-category', async (req, res) => {
   const db = await leerDb();
   const { name, description, optionList } = req.body.data.attributes.param.create;
-  
+
   const nuevaCategoria = {
     categoryId: db.categorias.length + 1,
     categoryCode: `CAT${String(db.categorias.length + 1).padStart(3, '0')}`,
@@ -81,10 +77,10 @@ app.post('/api/v1/ch-ms-category-management-pricing/create-category', async (req
       optionName: opcion.description
     }))
   };
-  
+
   db.categorias.push(nuevaCategoria);
   await escribirDb(db);
-  
+
   res.json({
     meta: { code: "200", message: "Transacción Exitosa" },
     transactionRequest: { request: req.body },
@@ -103,34 +99,37 @@ app.post('/api/v1/ch-ms-category-management-pricing/create-category', async (req
   });
 });
 
-// Listar y filtrar categorías
 app.get('/api/v1/ch-ms-category-management-pricing/categories', async (req, res) => {
   const db = await leerDb();
   const { optionName, categoryName, pageSize = 10, pageNumber = 1, sortBy = 'categoryName' } = req.query;
-  
+
+  const pageSizeInt = parseInt(pageSize);
+  const pageNumberInt = parseInt(pageNumber);
+
   let categoriasFiltradas = db.categorias;
-  
+
   if (categoryName) {
-    categoriasFiltradas = categoriasFiltradas.filter(cat => 
+    categoriasFiltradas = categoriasFiltradas.filter(cat =>
       cat.categoryName.toLowerCase().includes(categoryName.toLowerCase())
     );
   }
-  
+
   if (optionName) {
-    categoriasFiltradas = categoriasFiltradas.filter(cat => 
-      cat.optionsList.some(opcion => 
+    categoriasFiltradas = categoriasFiltradas.filter(cat =>
+      cat.optionsList.some(opcion =>
         opcion.optionName.toLowerCase().includes(optionName.toLowerCase())
       )
     );
   }
-  
+
   const totalRegistros = categoriasFiltradas.length;
-  const indiceInicio = (pageNumber - 1) * pageSize;
-  const indiceFin = indiceInicio + parseInt(pageSize);
-  
+  const indiceInicio = (pageNumberInt - 1) * pageSizeInt;
+  const indiceFin = indiceInicio + pageSizeInt;
+
   categoriasFiltradas.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
+
   const categoriasPaginadas = categoriasFiltradas.slice(indiceInicio, indiceFin);
-  
+
   if (categoriasPaginadas.length === 0) {
     return res.status(404).json({
       errors: [{
@@ -142,7 +141,7 @@ app.get('/api/v1/ch-ms-category-management-pricing/categories', async (req, res)
       }]
     });
   }
-  
+
   res.json({
     meta: { code: "200", message: "Transacción Exitosa" },
     transactionRequest: { request: req.query },
@@ -157,8 +156,8 @@ app.get('/api/v1/ch-ms-category-management-pricing/categories', async (req, res)
           result: {
             pagination: {
               sortBy,
-              pageNumber: parseInt(pageNumber),
-              pageSize: parseInt(pageSize),
+              pageNumber: pageNumberInt,
+              pageSize: pageSizeInt,
               totalRecords: totalRegistros
             },
             categoryList: categoriasPaginadas
@@ -169,15 +168,14 @@ app.get('/api/v1/ch-ms-category-management-pricing/categories', async (req, res)
   });
 });
 
-// Validar nombre de categoría
 app.get('/api/v1/ch-ms-category-management-pricing/validate-category-name', async (req, res) => {
   const db = await leerDb();
   const { categoryName } = req.query;
-  
-  const existe = db.categorias.some(cat => 
+
+  const existe = db.categorias.some(cat =>
     cat.categoryName.toLowerCase() === categoryName.toLowerCase()
   );
-  
+
   if (existe) {
     return res.status(400).json({
       errors: [{
@@ -189,7 +187,7 @@ app.get('/api/v1/ch-ms-category-management-pricing/validate-category-name', asyn
       }]
     });
   }
-  
+
   res.json({
     meta: { code: "200", message: "Transacción Exitosa" },
     transactionRequest: { request: { categoryName } },
@@ -211,12 +209,118 @@ app.get('/api/v1/ch-ms-category-management-pricing/validate-category-name', asyn
   });
 });
 
-// Endpoint del panel de control
+app.get('/api/v1/ch-ms-category-management-pricing/options', async (req, res) => {
+  const db = await leerDb();
+  const { channel } = req.query;
+
+  const opciones = [
+    // Aquí puedes agregar las opciones desde la base de datos o de una fuente de datos estática
+    {
+      id: 0,
+      optionCode: "3105",
+      state: "Active",
+      active: true,
+      description: "Actualizacion de solicitudes de aprobaciones de convenios Libranzas",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "0705",
+      state: "Active",
+      active: true,
+      description: "Administrar productos de terceros",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "6100",
+      state: "Active",
+      active: true,
+      description: "Autenticación ANF",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "385",
+      state: "Active",
+      active: true,
+      description: "Autenticación transitoria Sucurtal Virtual Negocios",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "359",
+      state: "Active",
+      active: true,
+      description: "Balances SVN",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "6122",
+      state: "Active",
+      active: true,
+      description: "Cargar archivos de instruccion y soportes",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "8005",
+      state: "Active",
+      active: true,
+      description: "Consulta Estado Registro",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "0327",
+      state: "Active",
+      active: true,
+      description: "Consulta Listado Inversion Virtual",
+      inUse: false
+    },
+    {
+      id: 13,
+      optionCode: "4112",
+      state: "Active",
+      active: true,
+      description: "Consulta cuentas y saldos cliente de leasing",
+      inUse: true
+    },
+    {
+      id: 0,
+      optionCode: "3100",
+      state: "Active",
+      active: true,
+      description: "Consulta de Convenios por NIT",
+      inUse: false
+    }
+  ];
+
+  res.json({
+    meta: { code: "200", message: "Transacción Exitosa" },
+    transactionRequest: { request: { channel } },
+    transactionResponse: {
+      response: {
+        type: "PRICINGRETRIEVEOPTIONSRS",
+        id: null,
+        attributes: {
+          timestamp: new Date().toISOString(),
+          appId: "MACD",
+          appModule: "Pricing - Options",
+          result: {
+            optionList: opciones
+          }
+        }
+      }
+    }
+  });
+});
+
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// Endpoints de configuración
 app.get('/api/settings', async (req, res) => {
   const db = await leerDb();
   res.json(db.configuraciones);
@@ -228,7 +332,9 @@ app.post('/api/settings', async (req, res) => {
   await escribirDb(db);
   res.json({ message: 'Configuraciones actualizadas exitosamente' });
 });
-
+app.use(cors({
+  origin: 'http://localhost:4200' // Habilitar CORS para tu aplicación Angular
+}));
 app.listen(puerto, () => {
   console.log(`Servidor corriendo en http://localhost:${puerto}`);
 });

@@ -7,8 +7,8 @@ const summaryFilePath = path.join(process.cwd(), 'RESUMEN.TXT');
 
 // Directorios permitidos
 const allowedDirectories = [
-    'features/manage-categories',
-    'features/shared',
+    'filterable-table-widget',
+
     // Agrega más rutas aquí
 ];
 
