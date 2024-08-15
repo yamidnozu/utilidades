@@ -1,71 +1,92 @@
-# summary1 README
+# eDev Summary
 
-This is the README for your extension "summary1". After writing up a brief description, we recommend including the following sections.
+## Descripción
+eDev Summary es una poderosa extensión para Visual Studio Code que te permite generar resúmenes de código fuente de manera rápida y eficiente. Diseñada para desarrolladores que necesitan una visión general de sus proyectos, esta herramienta te ayuda a crear resúmenes personalizados de tus archivos de código, facilitando la documentación y el análisis de proyectos complejos.
 
-## Features
+## Características principales
+- 📁 Selección flexible de directorios y archivos
+- 🚫 Exclusión de carpetas específicas
+- 📄 Soporte para múltiples extensiones de archivo
+- 🔧 Configuraciones personalizables y reutilizables
+- 📊 Generación rápida de resúmenes en formato TXT
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## Instalación
+1. Abre Visual Studio Code
+2. Ve a la pestaña de Extensiones (Ctrl+Shift+X)
+3. Busca "eDev Summary"
+4. Haz clic en "Instalar"
 
-For example if there is an image subfolder under your extension project workspace:
+## Uso rápido
+1. Abre la barra lateral de eDev Summary en VS Code
+2. Crea una nueva configuración o selecciona una existente
+3. Configura los directorios, exclusiones y extensiones de archivo
+4. Haz clic en "Generar Resumen"
+5. ¡Listo! Tu resumen se generará en un archivo RESUMEN.TXT
 
-\!\[feature X\]\(images/feature-x.png\)
+## Guía detallada
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Crear una nueva configuración
+1. En la barra lateral de eDev Summary, selecciona "Crear nueva configuración"
+2. Completa los siguientes campos:
+   - Nombre de la Configuración: Un nombre único para identificar esta configuración
+   - Ruta del Directorio: La ruta base de tu proyecto (ej. C:\\Proyectos\\MiProyecto)
+   - Directorios Permitidos: Lista de subdirectorios a incluir, separados por comas (ej. src/app, src/components)
+   - Directorios Excluidos: Lista de subdirectorios a excluir, separados por comas (ej. node_modules, dist)
+   - Extensiones de Archivo: Selecciona las extensiones de archivo a incluir en el resumen
+3. Haz clic en "Guardar Configuración"
 
-## Requirements
+### Generar un resumen
+1. Selecciona una configuración existente del menú desplegable
+2. Haz clic en el botón "Generar Resumen"
+3. eDev Summary creará un archivo RESUMEN.TXT en la ruta base especificada en la configuración
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### Ejemplo de uso
+Supongamos que tienes un proyecto React con la siguiente estructura:
 
-## Extension Settings
+```
+MiProyectoReact/
+├── src/
+│   ├── components/
+│   │   ├── Header.js
+│   │   └── Footer.js
+│   ├── pages/
+│   │   ├── Home.js
+│   │   └── About.js
+│   └── App.js
+├── public/
+│   └── index.html
+└── node_modules/
+```
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+Para crear un resumen de los archivos JavaScript en la carpeta `src`, excluyendo `node_modules`, podrías configurar eDev Summary así:
 
-For example:
+1. Nombre de la Configuración: MiProyectoReact
+2. Ruta del Directorio: C:\\Proyectos\\MiProyectoReact
+3. Directorios Permitidos: src
+4. Directorios Excluidos: node_modules
+5. Extensiones de Archivo: .js
 
-This extension contributes the following settings:
+El resumen generado incluiría el contenido de App.js, Header.js, Footer.js, Home.js y About.js.
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## Consejos y trucos
+- Usa múltiples configuraciones para diferentes aspectos de tu proyecto. Por ejemplo, una para el frontend y otra para el backend.
+- Actualiza tus configuraciones a medida que tu proyecto evoluciona para mantener tus resúmenes relevantes.
+- Utiliza los resúmenes generados para documentación rápida, revisiones de código o para obtener una visión general del proyecto.
 
-## Known Issues
+## Solución de problemas
+- Si no se genera el resumen, verifica que la ruta del directorio sea correcta y que tengas permisos de escritura.
+- Asegúrate de que las extensiones de archivo seleccionadas coincidan con los tipos de archivo en tu proyecto.
+- Si faltan archivos en el resumen, revisa la configuración de directorios permitidos y excluidos.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## Contribuir
+¡Tus contribuciones son bienvenidas! Si tienes sugerencias, reportes de errores o quieres contribuir al código, por favor visita nuestro [repositorio en GitHub](https://github.com/yamidnozu/utilidades/tree/main/vscode-extensiones/ext1/summary1).
 
-## Release Notes
+## Licencia
+Este proyecto está licenciado bajo la Licencia MIT. Consulta el archivo LICENSE para más detalles.
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+## Contacto
+Si tienes preguntas o comentarios, no dudes en contactarnos en [tu-email@ejemplo.com](mailto:tu-email@ejemplo.com).
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Esperamos que eDev Summary te ayude a mejorar tu flujo de trabajo de desarrollo. ¡Feliz codificación!
