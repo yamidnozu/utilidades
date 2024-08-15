@@ -212,7 +212,7 @@ class SummaryViewProvider {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Configuración de ResumenCódigo</title>
+                <title>Configuración de</title>
                 <style>
                     body { 
                         padding: 20px; 
@@ -291,7 +291,7 @@ class SummaryViewProvider {
         </head>
         <body>
             <div class="container">
-                <h1>Configurar Extensión ResumenCódigo</h1>
+                <h1>Configurar Extensión</h1>
                 <select id="configSelector">
                     <option value="">Crear nueva configuración</option>
                 </select>
