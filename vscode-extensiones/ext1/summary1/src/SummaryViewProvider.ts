@@ -28,6 +28,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 switch (message.command) {
                     case 'saveConfig':
                         await this.saveConfiguration(message);
+                        await this.updateExtensions(webviewView.webview, message.directoryPath, message.allowedDirectories, message.excludedDirectories);
                         break;
                     case 'runSummary':
                         if (message.configName) {
@@ -48,8 +49,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         }
                         break;
                     case 'scanDirectory':
-                        const extensions = await this.scanDirectoryForExtensions(message.directoryPath);
-                        webviewView.webview.postMessage({ command: 'setExtensions', extensions });
+                        await this.updateExtensions(webviewView.webview, message.directoryPath, message.allowedDirectories, message.excludedDirectories);
                         break;
                 }
             }
@@ -58,13 +58,15 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         this.sendConfigsToWebview(webviewView.webview);
     }
 
+    private async updateExtensions(webview: vscode.Webview, directoryPath: string, allowedDirectories: string, excludedDirectories: string) {
+        const extensions = await this.scanDirectoryForExtensions(directoryPath, allowedDirectories, excludedDirectories);
+        webview.postMessage({ command: 'setExtensions', extensions });
+    }
 
-    private async scanDirectoryForExtensions(directoryPath: string): Promise<string[]> {
+    private async scanDirectoryForExtensions(directoryPath: string, allowedDirectories: string, excludedDirectories: string): Promise<string[]> {
         const extensions = new Set<string>();
-        const config = vscode.workspace.getConfiguration('summary1');
-        const configurations = config.get('configurations') as ConfigurationItem[];
-        const currentConfig = configurations.find(c => c.directoryPath === directoryPath);
-        const excludedDirectories = currentConfig ? currentConfig.excludedDirectories : [];
+        const allowedDirs = allowedDirectories ? allowedDirectories.split(',').map(dir => dir.trim()) : [];
+        const excludedDirs = excludedDirectories ? excludedDirectories.split(',').map(dir => dir.trim()) : [];
 
         const scanDir = async (dir: string) => {
             const entries = await fs.promises.readdir(dir, { withFileTypes: true });
@@ -72,12 +74,14 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 const fullPath = path.join(dir, entry.name);
                 const relativePath = path.relative(directoryPath, fullPath);
 
-                if (excludedDirectories.some(excludedDir => relativePath.startsWith(excludedDir))) {
+                if (excludedDirs.some(excludedDir => relativePath.startsWith(excludedDir))) {
                     continue;
                 }
 
                 if (entry.isDirectory()) {
-                    await scanDir(fullPath);
+                    if (allowedDirs.length === 0 || allowedDirs.some(allowedDir => relativePath.startsWith(allowedDir))) {
+                        await scanDir(fullPath);
+                    }
                 } else if (entry.isFile()) {
                     const ext = path.extname(entry.name).toLowerCase();
                     if (ext) {
@@ -95,6 +99,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
 
         return Array.from(extensions);
     }
+
     private async sendConfigsToWebview(webview: vscode.Webview) {
         const config = vscode.workspace.getConfiguration('summary1');
         const configurations = config.get('configurations') as ConfigurationItem[];
@@ -108,10 +113,9 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
             configurations
         });
 
-        // Scan for extensions if there's at least one configuration
         if (configurations.length > 0) {
-            const extensions = await this.scanDirectoryForExtensions(configurations[0].directoryPath);
-            webview.postMessage({ command: 'setExtensions', extensions });
+            const config = configurations[0];
+            await this.updateExtensions(webview, config.directoryPath, config.allowedDirectories.join(', '), config.excludedDirectories.join(', '));
         }
     }
 
@@ -123,8 +127,8 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
             const newConfig: ConfigurationItem = {
                 name: message.name,
                 directoryPath: message.directoryPath,
-                allowedDirectories: message.allowedDirectories.split(',').map((dir: string) => dir.trim()),
-                excludedDirectories: message.excludedDirectories.split(',').map((dir: string) => dir.trim()),
+                allowedDirectories: message.allowedDirectories ? message.allowedDirectories.split(',').map((dir: string) => dir.trim()) : [],
+                excludedDirectories: message.excludedDirectories ? message.excludedDirectories.split(',').map((dir: string) => dir.trim()) : [],
                 extensions: message.extensions
             };
 
@@ -166,7 +170,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
 
         const { directoryPath, allowedDirectories, excludedDirectories, extensions } = selectedConfig;
 
-        if (!directoryPath || allowedDirectories.length === 0 || extensions.length === 0) {
+        if (!directoryPath || extensions.length === 0) {
             vscode.window.showErrorMessage('Please configure all settings before running the summary.');
             return;
         }
@@ -203,7 +207,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 }
 
                 if (fs.statSync(fullPath).isDirectory()) {
-                    if (allowedDirectories.some(allowedDir => relativePath.startsWith(allowedDir))) {
+                    if (allowedDirectories.length === 0 || allowedDirectories.some(allowedDir => relativePath.startsWith(allowedDir))) {
                         processDirectory(fullPath);
                     }
                 } else if (extensions.includes(path.extname(file))) {
@@ -216,8 +220,6 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         processDirectory(directoryPath);
         return summaryContent;
     }
-
-
     private getWebviewContent(webview: vscode.Webview) {
         return `
             <!DOCTYPE html>
@@ -225,7 +227,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Configuración de</title>
+                <title>Configuración de Resumen</title>
                 <style>
                     body { 
                         padding: 20px; 
@@ -300,177 +302,188 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         margin-left: 5px;
                         font-weight: bold;
                     }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>Configurar Extensión</h1>
-                <select id="configSelector">
-                    <option value="">Crear nueva configuración</option>
-                </select>
-                <form id="config-form">
-                    <label for="configName">Nombre de la Configuración:</label>
-                    <input type="text" id="configName" required placeholder="Ingresa el nombre de la configuración">
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Configurar Extensión</h1>
+                    <select id="configSelector">
+                        <option value="">Crear nueva configuración</option>
+                    </select>
+                    <form id="config-form">
+                        <label for="configName">Nombre de la Configuración:</label>
+                        <input type="text" id="configName" required placeholder="Ingresa el nombre de la configuración">
 
-                    <label for="directoryPath">Ruta del Directorio:</label>
-                    <div class="example">Ejemplo: C:\\Proyectos\\MiProyecto</div>
-                    <input type="text" id="directoryPath" required placeholder="Ingresa la ruta del directorio base">
-                    
-                    <label for="allowedDirectories">Directorios Permitidos (separados por comas):</label>
-                    <div class="example">Ejemplo: src/app, src/components</div>
-                    <input type="text" id="allowedDirectories" required placeholder="Ingresa los directorios permitidos">
-                    
-                    <label for="excludedDirectories">Directorios Excluidos (separados por comas):</label>
-                    <div class="example">Ejemplo: node_modules, dist</div>
-                    <input type="text" id="excludedDirectories" placeholder="Ingresa los directorios excluidos">
-                    
-                    <label for="extensions">Extensiones de Archivo:</label>
-                    <div id="extensionBadges" class="extension-badges"></div>
-                    
-                    <button type="submit">Guardar Configuración</button>
-                </form>
-                <button id="runSummary">Generar Resumen</button>
-                <button id="deleteConfig">Eliminar Configuración</button>
-            </div>
-            <script>
-                const vscode = acquireVsCodeApi();
-                const configSelector = document.getElementById('configSelector');
-                const configNameInput = document.getElementById('configName');
-                const directoryPathInput = document.getElementById('directoryPath');
-                const allowedDirectoriesInput = document.getElementById('allowedDirectories');
-                const excludedDirectoriesInput = document.getElementById('excludedDirectories');
-                const extensionBadgesDiv = document.getElementById('extensionBadges');
-                const runSummaryButton = document.getElementById('runSummary');
-                const deleteConfigButton = document.getElementById('deleteConfig');
+                        <label for="directoryPath">Ruta del Directorio:</label>
+                        <div class="example">Ejemplo: C:\\Proyectos\\MiProyecto</div>
+                        <input type="text" id="directoryPath" required placeholder="Ingresa la ruta del directorio base">
+                        
+                        <label for="allowedDirectories">Directorios Permitidos (separados por comas):</label>
+                        <div class="example">Ejemplo: src/app, src/components</div>
+                        <input type="text" id="allowedDirectories" placeholder="Ingresa los directorios permitidos">
+                        
+                        <label for="excludedDirectories">Directorios Excluidos (separados por comas):</label>
+                        <div class="example">Ejemplo: node_modules, dist</div>
+                        <input type="text" id="excludedDirectories" placeholder="Ingresa los directorios excluidos">
+                        
+                        <label for="extensions">Extensiones de Archivo:</label>
+                        <div id="extensionBadges" class="extension-badges"></div>
+                        
+                        <button type="submit">Guardar Configuración</button>
+                    </form>
+                    <button id="runSummary">Generar Resumen</button>
+                    <button id="deleteConfig">Eliminar Configuración</button>
+                </div>
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    const configSelector = document.getElementById('configSelector');
+                    const configNameInput = document.getElementById('configName');
+                    const directoryPathInput = document.getElementById('directoryPath');
+                    const allowedDirectoriesInput = document.getElementById('allowedDirectories');
+                    const excludedDirectoriesInput = document.getElementById('excludedDirectories');
+                    const extensionBadgesDiv = document.getElementById('extensionBadges');
+                    const runSummaryButton = document.getElementById('runSummary');
+                    const deleteConfigButton = document.getElementById('deleteConfig');
 
-                let configurations = [];
-                let selectedExtensions = new Set();
+                    let configurations = [];
+                    let selectedExtensions = new Set();
 
-                vscode.postMessage({ command: 'getConfigs' });
+                    vscode.postMessage({ command: 'getConfigs' });
 
-                directoryPathInput.addEventListener('input', debounce(async () => {
-                    const directoryPath = directoryPathInput.value;
-                    if (directoryPath) {
-                        vscode.postMessage({ command: 'scanDirectory', directoryPath });
-                    }
-                }, 500));
+                    const updateExtensions = debounce(() => {
+                        vscode.postMessage({ 
+                            command: 'scanDirectory', 
+                            directoryPath: directoryPathInput.value,
+                            allowedDirectories: allowedDirectoriesInput.value,
+                            excludedDirectories: excludedDirectoriesInput.value
+                        });
+                    }, 500);
 
-                function debounce(func, wait) {
-                    let timeout;
-                    return function executedFunction(...args) {
-                        const later = () => {
+                    directoryPathInput.addEventListener('input', updateExtensions);
+                    allowedDirectoriesInput.addEventListener('input', updateExtensions);
+                    excludedDirectoriesInput.addEventListener('input', updateExtensions);
+
+                    function debounce(func, wait) {
+                        let timeout;
+                        return function executedFunction(...args) {
+                            const later = () => {
+                                clearTimeout(timeout);
+                                func(...args);
+                            };
                             clearTimeout(timeout);
-                            func(...args);
+                            timeout = setTimeout(later, wait);
                         };
-                        clearTimeout(timeout);
-                        timeout = setTimeout(later, wait);
-                    };
-                }
-
-                function updateExtensionBadges(extensions) {
-                    extensionBadgesDiv.innerHTML = '';
-                    extensions.forEach(ext => {
-                        const badge = document.createElement('div');
-                        badge.className = 'extension-badge' + (selectedExtensions.has(ext) ? ' selected' : '');
-                        badge.textContent = ext;
-                        badge.onclick = () => toggleExtension(ext, badge);
-                        extensionBadgesDiv.appendChild(badge);
-                    });
-                }
-
-                function toggleExtension(ext, badge) {
-                    if (selectedExtensions.has(ext)) {
-                        selectedExtensions.delete(ext);
-                        badge.classList.remove('selected');
-                    } else {
-                        selectedExtensions.add(ext);
-                        badge.classList.add('selected');
                     }
-                }
 
-                window.addEventListener('message', event => {
-                    const message = event.data;
-                    switch (message.command) {
-                        case 'setConfigs':
-                            configurations = message.configurations;
-                            updateConfigSelector();
-                            break;
-                        case 'setExtensions':
-                            updateExtensionBadges(message.extensions);
-                            break;
-                    }
-                });
-
-                function updateConfigSelector() {
-                    configSelector.innerHTML = '<option value="">Crear nueva configuración</option>';
-                    configurations.forEach(config => {
-                        const option = document.createElement('option');
-                        option.value = config.name;
-                        option.textContent = config.name;
-                        configSelector.appendChild(option);
-                    });
-                }
-
-                configSelector.addEventListener('change', (event) => {
-                    const selectedConfig = configurations.find(c => c.name === event.target.value);
-                    if (selectedConfig) {
-                        configNameInput.value = selectedConfig.name;
-                        directoryPathInput.value = selectedConfig.directoryPath;
-                        allowedDirectoriesInput.value = selectedConfig.allowedDirectories.join(', ');
-                        excludedDirectoriesInput.value = selectedConfig.excludedDirectories.join(', ');
-                        selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
-                        vscode.postMessage({ command: 'scanDirectory', directoryPath: selectedConfig.directoryPath });
-                        runSummaryButton.disabled = false;
-                        deleteConfigButton.disabled = false;
-                    } else {
-                        configNameInput.value = '';
-                        directoryPathInput.value = '';
-                        allowedDirectoriesInput.value = '';
-                        excludedDirectoriesInput.value = '';
-                        selectedExtensions.clear();
+                    function updateExtensionBadges(extensions) {
                         extensionBadgesDiv.innerHTML = '';
-                        runSummaryButton.disabled = true;
-                        deleteConfigButton.disabled = true;
+                        extensions.forEach(ext => {
+                            const badge = document.createElement('div');
+                            badge.className = 'extension-badge' + (selectedExtensions.has(ext) ? ' selected' : '');
+                            badge.textContent = ext;
+                            badge.onclick = () => toggleExtension(ext, badge);
+                            extensionBadgesDiv.appendChild(badge);
+                        });
                     }
-                });
 
-                document.getElementById('config-form').addEventListener('submit', (event) => {
-                    event.preventDefault();
-                    vscode.postMessage({
-                        command: 'saveConfig',
-                        name: configNameInput.value,
-                        directoryPath: directoryPathInput.value,
-                        allowedDirectories: allowedDirectoriesInput.value,
-                        excludedDirectories: excludedDirectoriesInput.value,
-                        extensions: Array.from(selectedExtensions)
+                    function toggleExtension(ext, badge) {
+                        if (selectedExtensions.has(ext)) {
+                            selectedExtensions.delete(ext);
+                            badge.classList.remove('selected');
+                        } else {
+                            selectedExtensions.add(ext);
+                            badge.classList.add('selected');
+                        }
+                    }
+
+                    window.addEventListener('message', event => {
+                        const message = event.data;
+                        switch (message.command) {
+                            case 'setConfigs':
+                                configurations = message.configurations;
+                                updateConfigSelector();
+                                break;
+                            case 'setExtensions':
+                                updateExtensionBadges(message.extensions);
+                                break;
+                        }
                     });
-                });
 
-                runSummaryButton.addEventListener('click', () => {
-                    const selectedConfigName = configSelector.value;
-                    if (selectedConfigName) {
-                        vscode.postMessage({ 
-                            command: 'runSummary',
-                            configName: selectedConfigName
+                    function updateConfigSelector() {
+                        configSelector.innerHTML = '<option value="">Crear nueva configuración</option>';
+                        configurations.forEach(config => {
+                            const option = document.createElement('option');
+                            option.value = config.name;
+                            option.textContent = config.name;
+                            configSelector.appendChild(option);
                         });
-                    } else {
+                    }
+
+                    configSelector.addEventListener('change', (event) => {
+                        const selectedConfig = configurations.find(c => c.name === event.target.value);
+                        if (selectedConfig) {
+                            configNameInput.value = selectedConfig.name;
+                            directoryPathInput.value = selectedConfig.directoryPath;
+                            allowedDirectoriesInput.value = selectedConfig.allowedDirectories.join(', ');
+                            excludedDirectoriesInput.value = selectedConfig.excludedDirectories.join(', ');
+                            selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
+                            vscode.postMessage({ 
+                                command: 'scanDirectory', 
+                                directoryPath: selectedConfig.directoryPath,
+                                allowedDirectories: allowedDirectoriesInput.value,
+                                excludedDirectories: excludedDirectoriesInput.value
+                            });
+                            runSummaryButton.disabled = false;
+                            deleteConfigButton.disabled = false;
+                        } else {
+                            configNameInput.value = '';
+                            directoryPathInput.value = '';
+                            allowedDirectoriesInput.value = '';
+                            excludedDirectoriesInput.value = '';
+                            selectedExtensions.clear();
+                            extensionBadgesDiv.innerHTML = '';
+                            runSummaryButton.disabled = true;
+                            deleteConfigButton.disabled = true;
+                        }
+                    });
+
+                    document.getElementById('config-form').addEventListener('submit', (event) => {
+                        event.preventDefault();
                         vscode.postMessage({
-                            command: 'showError',
-                            message: 'Por favor, selecciona una configuración antes de generar el resumen.'
+                            command: 'saveConfig',
+                            name: configNameInput.value,
+                            directoryPath: directoryPathInput.value,
+                            allowedDirectories: allowedDirectoriesInput.value,
+                            excludedDirectories: excludedDirectoriesInput.value,
+                            extensions: Array.from(selectedExtensions)
                         });
-                    }
-                });
+                    });
 
-                deleteConfigButton.addEventListener('click', () => {
-                    if (configSelector.value) {
-                        vscode.postMessage({ 
-                            command: 'deleteConfig',
-                            configName: configSelector.value
-                        });
-                    }
-                });
-            </script>
-        </body>
-        </html>`;
+                    runSummaryButton.addEventListener('click', () => {
+                        const selectedConfigName = configSelector.value;
+                        if (selectedConfigName) {
+                            vscode.postMessage({ 
+                                command: 'runSummary',
+                                configName: selectedConfigName
+                            });
+                        } else {
+                            vscode.postMessage({
+                                command: 'showError',
+                                message: 'Por favor, selecciona una configuración antes de generar el resumen.'
+                            });
+                        }
+                    });
+
+                    deleteConfigButton.addEventListener('click', () => {
+                        if (configSelector.value) {
+                            vscode.postMessage({ 
+                                command: 'deleteConfig',
+                                configName: configSelector.value
+                            });
+                        }
+                    });
+                </script>
+            </body>
+            </html>`;
     }
 }
