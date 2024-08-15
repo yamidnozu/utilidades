@@ -3,6 +3,7 @@
   "displayName": "eDev Summary",
   "description": "Genera resúmenes de archivos de código fuente en un solo archivo RESUMEN.txt, útil como insumos para dar contexto a la IA de tu proyecto.",
   "version": "0.0.1",
+  "publisher": "edevcoresummary",
   "engines": {
     "vscode": "^1.92.0"
   },
