@@ -85,7 +85,7 @@ El resumen generado incluiría el contenido de App.js, Header.js, Footer.js, Hom
 Este proyecto está licenciado bajo la Licencia MIT. Consulta el archivo LICENSE para más detalles.
 
 ## Contacto
-Si tienes preguntas o comentarios, no dudes en contactarnos en [tu-email@ejemplo.com](mailto:tu-email@ejemplo.com).
+Si tienes preguntas o comentarios, no dudes en contactarnos en [edev.core@gmail.com](mailto:edev.core@gmail.com).
 
 ---
 
