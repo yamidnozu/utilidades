@@ -1,0 +1,107 @@
+{
+  "name": "summary1",
+  "displayName": "ResumenCódigo",
+  "description": "Genera resúmenes de archivos de código fuente",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:summaryConfigView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "ResumenCódigo",
+      "properties": {
+        "summary1.configurations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Nombre de la configuración"
+              },
+              "directoryPath": {
+                "type": "string",
+                "description": "Ruta base de la carpeta para el resumen"
+              },
+              "allowedDirectories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Carpetas permitidas para el resumen"
+              },
+              "excludedDirectories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Carpetas excluidas del resumen"
+              },
+              "extensions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Extensiones de archivo a incluir en el resumen"
+              }
+            }
+          },
+          "default": [],
+          "description": "Múltiples configuraciones para diferentes proyectos"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "summaryView",
+          "title": "ResumenCódigo",
+          "icon": "resources/summary.svg"
+        }
+      ]
+    },
+    "views": {
+      "summaryView": [
+        {
+          "type": "webview",
+          "id": "summaryConfigView",
+          "name": "Configuración de Resumen"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "summary1.runSummary",
+        "title": "Generar Resumen"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.92.0",
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "14.x",
+    "eslint": "^7.27.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "glob": "^7.1.7",
+    "mocha": "^8.4.0",
+    "typescript": "^4.3.2",
+    "vscode-test": "^1.5.2"
+  }
+}

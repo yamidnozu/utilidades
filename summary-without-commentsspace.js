@@ -7,12 +7,12 @@ const summaryFilePath = path.join(process.cwd(), 'RESUMEN.TXT');
 
 // Directorios permitidos
 const allowedDirectories = [
-  'payment-flow-widget/src/lib',
+  'src/app',
   // Agrega más rutas aquí
 ];
 
 // Extensiones de archivo a procesar
-const extensions = new Set(['.js', '.ts', '.jsx', '.html', '.json']);
+const extensions = new Set(['.js', '.ts', '.jsx', '.json']);
 
 // Verifica si el archivo debe ser excluido
 function shouldExcludeFile(fileName) {

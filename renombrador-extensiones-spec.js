@@ -26,7 +26,7 @@ function loadGitignore(directory) {
  * @param {string} directory - Directorio a recorrer para renombrar archivos.
  */
 function renameSpecFiles(directory) {
-    const nombrequeesta = '.specListo.ts';
+    const nombrequeesta = '.spec⭕.ts';
     const nombrequequiero = '.spec.ts';
     // const nombrequeesta = '.spec.ts';
     // const nombrequequiero = '.specListo.ts';
