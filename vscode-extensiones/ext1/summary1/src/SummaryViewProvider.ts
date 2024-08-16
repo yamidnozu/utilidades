@@ -7,6 +7,7 @@ interface ConfigurationItem {
     directoryPath: string;
     allowedDirectories: string[];
     excludedDirectories: string[];
+    excludedFiles: string[];
     extensions: string[];
 }
 
@@ -28,7 +29,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 switch (message.command) {
                     case 'saveConfig':
                         await this.saveConfiguration(message);
-                        await this.updateExtensions(webviewView.webview, message.directoryPath, message.allowedDirectories, message.excludedDirectories);
+                        await this.sendConfigsToWebview(webviewView.webview);
                         break;
                     case 'runSummary':
                         if (message.configName) {
@@ -48,9 +49,6 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             vscode.window.showErrorMessage('No configuration selected for deletion.');
                         }
                         break;
-                    case 'scanDirectory':
-                        await this.updateExtensions(webviewView.webview, message.directoryPath, message.allowedDirectories, message.excludedDirectories);
-                        break;
                 }
             }
         );
@@ -58,65 +56,14 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         this.sendConfigsToWebview(webviewView.webview);
     }
 
-    private async updateExtensions(webview: vscode.Webview, directoryPath: string, allowedDirectories: string, excludedDirectories: string) {
-        const extensions = await this.scanDirectoryForExtensions(directoryPath, allowedDirectories, excludedDirectories);
-        webview.postMessage({ command: 'setExtensions', extensions });
-    }
-
-    private async scanDirectoryForExtensions(directoryPath: string, allowedDirectories: string, excludedDirectories: string): Promise<string[]> {
-        const extensions = new Set<string>();
-        const allowedDirs = allowedDirectories ? allowedDirectories.split(',').map(dir => dir.trim()) : [];
-        const excludedDirs = excludedDirectories ? excludedDirectories.split(',').map(dir => dir.trim()) : [];
-
-        const scanDir = async (dir: string) => {
-            const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-            for (const entry of entries) {
-                const fullPath = path.join(dir, entry.name);
-                const relativePath = path.relative(directoryPath, fullPath);
-
-                if (excludedDirs.some(excludedDir => relativePath.startsWith(excludedDir))) {
-                    continue;
-                }
-
-                if (entry.isDirectory()) {
-                    if (allowedDirs.length === 0 || allowedDirs.some(allowedDir => relativePath.startsWith(allowedDir))) {
-                        await scanDir(fullPath);
-                    }
-                } else if (entry.isFile()) {
-                    const ext = path.extname(entry.name).toLowerCase();
-                    if (ext) {
-                        extensions.add(ext);
-                    }
-                }
-            }
-        };
-
-        try {
-            await scanDir(directoryPath);
-        } catch (error) {
-            console.error('Error scanning directory:', error);
-        }
-
-        return Array.from(extensions);
-    }
-
     private async sendConfigsToWebview(webview: vscode.Webview) {
         const config = vscode.workspace.getConfiguration('summary1');
         const configurations = config.get('configurations') as ConfigurationItem[];
-
-        configurations.forEach(conf => {
-            conf.extensions = conf.extensions.map(ext => ext.toLowerCase());
-        });
 
         webview.postMessage({
             command: 'setConfigs',
             configurations
         });
-
-        if (configurations.length > 0) {
-            const config = configurations[0];
-            await this.updateExtensions(webview, config.directoryPath, config.allowedDirectories.join(', '), config.excludedDirectories.join(', '));
-        }
     }
 
     private async saveConfiguration(message: any) {
@@ -129,6 +76,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 directoryPath: message.directoryPath,
                 allowedDirectories: message.allowedDirectories ? message.allowedDirectories.split(',').map((dir: string) => dir.trim()) : [],
                 excludedDirectories: message.excludedDirectories ? message.excludedDirectories.split(',').map((dir: string) => dir.trim()) : [],
+                excludedFiles: message.excludedFiles ? message.excludedFiles.split(',').map((file: string) => file.trim()) : [],
                 extensions: message.extensions
             };
 
@@ -168,7 +116,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
-        const { directoryPath, allowedDirectories, excludedDirectories, extensions } = selectedConfig;
+        const { directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions } = selectedConfig;
 
         if (!directoryPath || extensions.length === 0) {
             vscode.window.showErrorMessage('Please configure all settings before running the summary.');
@@ -176,7 +124,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         }
 
         try {
-            const summaryContent = await this.generateSummary(directoryPath, allowedDirectories, excludedDirectories, extensions);
+            const summaryContent = await this.generateSummary(directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions);
 
             const summaryPath = path.join(directoryPath, 'RESUMEN.TXT');
             fs.writeFileSync(summaryPath, summaryContent);
@@ -187,13 +135,13 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private async generateSummary(directoryPath: string, allowedDirectories: string[], excludedDirectories: string[], extensions: string[]): Promise<string> {
+    private async generateSummary(directoryPath: string, allowedDirectories: string[], excludedDirectories: string[], excludedFiles: string[], extensions: string[]): Promise<string> {
         let summaryContent = '';
 
         const isExcluded = (relativePath: string) => {
             return excludedDirectories.some(excludedDir =>
                 relativePath === excludedDir || relativePath.startsWith(excludedDir + path.sep)
-            );
+            ) || excludedFiles.includes(path.basename(relativePath));
         };
 
         const processDirectory = (dir: string) => {
@@ -220,6 +168,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         processDirectory(directoryPath);
         return summaryContent;
     }
+
     private getWebviewContent(webview: vscode.Webview) {
         return `
             <!DOCTYPE html>
@@ -326,6 +275,10 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         <div class="example">Ejemplo: node_modules, dist</div>
                         <input type="text" id="excludedDirectories" placeholder="Ingresa los directorios excluidos">
                         
+                        <label for="excludedFiles">Archivos Excluidos (separados por comas):</label>
+                        <div class="example">Ejemplo: package-lock.json, .gitignore</div>
+                        <input type="text" id="excludedFiles" placeholder="Ingresa los archivos excluidos">
+                        
                         <label for="extensions">Extensiones de Archivo:</label>
                         <div id="extensionBadges" class="extension-badges"></div>
                         
@@ -341,6 +294,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     const directoryPathInput = document.getElementById('directoryPath');
                     const allowedDirectoriesInput = document.getElementById('allowedDirectories');
                     const excludedDirectoriesInput = document.getElementById('excludedDirectories');
+                    const excludedFilesInput = document.getElementById('excludedFiles');
                     const extensionBadgesDiv = document.getElementById('extensionBadges');
                     const runSummaryButton = document.getElementById('runSummary');
                     const deleteConfigButton = document.getElementById('deleteConfig');
@@ -348,32 +302,86 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     let configurations = [];
                     let selectedExtensions = new Set();
 
-                    vscode.postMessage({ command: 'getConfigs' });
+                    // Valores por defecto
+                    const defaultExcludedDirectories = [
+                            'node_modules',
+                            '.git',
+                            'dist',
+                            'build',
+                            'out',
+                            'target',
+                            '.idea',
+                            '.vscode',
+                            '.gradle',
+                            'bin',
+                            'obj',
+                            'logs',
+                            'temp',
+                            'tmp',
+                            'cache',
+                            'coverage',
+                            '__pycache__',
+                            'venv',
+                            'env',
+                            '.next',
+                            '.nuxt',
+                            'vendor'
+                        ].join(', ');
+                        const defaultExcludedFiles = [
+                            'package-lock.json',
+                            '.gitignore',
+                            '.DS_Store',
+                            'Thumbs.db',
+                            '*.log',
+                            '*.tmp',
+                            '*.temp',
+                            '*.swp',
+                            '*.bak',
+                            '*.class',
+                            '*.pyc',
+                            '*.pyo',
+                            '*.exe',
+                            '*.dll',
+                            '*.obj',
+                            '*.o',
+                            '*.a',
+                            '*.lib',
+                            '*.so',
+                            '*.dylib',
+                            '*.ncb',
+                            '*.sdf',
+                            '*.suo',
+                            '*.pdb',
+                            '*.idb',
+                            '.env',
+                            '.env.local',
+                            '.env.development.local',
+                            '.env.test.local',
+                            '.env.production.local',
+                            'npm-debug.log*',
+                            'yarn-debug.log*',
+                            'yarn-error.log*',
+                            '.pnp.*',
+                            '*.sqlite'
+                        ].join(', ');
 
-                    const updateExtensions = debounce(() => {
-                        vscode.postMessage({ 
-                            command: 'scanDirectory', 
-                            directoryPath: directoryPathInput.value,
-                            allowedDirectories: allowedDirectoriesInput.value,
-                            excludedDirectories: excludedDirectoriesInput.value
-                        });
-                    }, 500);
-
-                    directoryPathInput.addEventListener('input', updateExtensions);
-                    allowedDirectoriesInput.addEventListener('input', updateExtensions);
-                    excludedDirectoriesInput.addEventListener('input', updateExtensions);
-
-                    function debounce(func, wait) {
-                        let timeout;
-                        return function executedFunction(...args) {
-                            const later = () => {
-                                clearTimeout(timeout);
-                                func(...args);
-                            };
-                            clearTimeout(timeout);
-                            timeout = setTimeout(later, wait);
-                        };
+                    // Función para inicializar la interfaz
+                    function initializeInterface() {
+                        configNameInput.value = '';
+                        directoryPathInput.value = '';
+                        allowedDirectoriesInput.value = '';
+                        excludedDirectoriesInput.value = defaultExcludedDirectories;
+                        excludedFilesInput.value = defaultExcludedFiles;
+                        selectedExtensions.clear();
+                        extensionBadgesDiv.innerHTML = '';
+                        runSummaryButton.disabled = true;
+                        deleteConfigButton.disabled = true;
                     }
+
+                    // Inicializar la interfaz al cargar
+                    initializeInterface();
+
+                    vscode.postMessage({ command: 'getConfigs' });
 
                     function updateExtensionBadges(extensions) {
                         extensionBadgesDiv.innerHTML = '';
@@ -403,9 +411,6 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 configurations = message.configurations;
                                 updateConfigSelector();
                                 break;
-                            case 'setExtensions':
-                                updateExtensionBadges(message.extensions);
-                                break;
                         }
                     });
 
@@ -425,25 +430,18 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             configNameInput.value = selectedConfig.name;
                             directoryPathInput.value = selectedConfig.directoryPath;
                             allowedDirectoriesInput.value = selectedConfig.allowedDirectories.join(', ');
-                            excludedDirectoriesInput.value = selectedConfig.excludedDirectories.join(', ');
+                            excludedDirectoriesInput.value = selectedConfig.excludedDirectories && selectedConfig.excludedDirectories.length > 0
+                                ? selectedConfig.excludedDirectories.join(', ')
+                                : defaultExcludedDirectories;
+                            excludedFilesInput.value = selectedConfig.excludedFiles && selectedConfig.excludedFiles.length > 0 
+                                ? selectedConfig.excludedFiles.join(', ') 
+                                : defaultExcludedFiles;
                             selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
-                            vscode.postMessage({ 
-                                command: 'scanDirectory', 
-                                directoryPath: selectedConfig.directoryPath,
-                                allowedDirectories: allowedDirectoriesInput.value,
-                                excludedDirectories: excludedDirectoriesInput.value
-                            });
+                            updateExtensionBadges(selectedConfig.extensions);
                             runSummaryButton.disabled = false;
                             deleteConfigButton.disabled = false;
                         } else {
-                            configNameInput.value = '';
-                            directoryPathInput.value = '';
-                            allowedDirectoriesInput.value = '';
-                            excludedDirectoriesInput.value = '';
-                            selectedExtensions.clear();
-                            extensionBadgesDiv.innerHTML = '';
-                            runSummaryButton.disabled = true;
-                            deleteConfigButton.disabled = true;
+                            initializeInterface();
                         }
                     });
 
@@ -455,6 +453,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             directoryPath: directoryPathInput.value,
                             allowedDirectories: allowedDirectoriesInput.value,
                             excludedDirectories: excludedDirectoriesInput.value,
+                            excludedFiles: excludedFilesInput.value,
                             extensions: Array.from(selectedExtensions)
                         });
                     });
@@ -467,10 +466,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 configName: selectedConfigName
                             });
                         } else {
-                            vscode.postMessage({
-                                command: 'showError',
-                                message: 'Por favor, selecciona una configuración antes de generar el resumen.'
-                            });
+                            vscode.window.showErrorMessage('Por favor, selecciona una configuración antes de generar el resumen.');
                         }
                     });
 
