@@ -62,16 +62,65 @@ class SummaryViewProvider {
                         vscode.window.showErrorMessage('No configuration selected for deletion.');
                     }
                     break;
+                case 'findExtensions':
+                    try {
+                        const extensions = await this.findExtensions(message.directoryPath, message.allowedDirectories.split(',').map((dir) => dir.trim()), message.excludedDirectories.split(',').map((dir) => dir.trim()), message.excludedFiles.split(',').map((file) => file.trim()));
+                        webviewView.webview.postMessage({
+                            command: 'setExtensions',
+                            extensions: Array.from(extensions)
+                        });
+                    }
+                    catch (error) {
+                        console.error('Error finding extensions:', error);
+                        webviewView.webview.postMessage({
+                            command: 'setExtensions',
+                            extensions: []
+                        });
+                    }
+                    break;
             }
         });
         this.sendConfigsToWebview(webviewView.webview);
+    }
+    async findExtensions(directoryPath, allowedDirectories, excludedDirectories, excludedFiles) {
+        const extensions = new Set();
+        const isExcluded = (relativePath) => {
+            return excludedDirectories.some(excludedDir => relativePath === excludedDir || relativePath.startsWith(excludedDir + path.sep)) || excludedFiles.includes(path.basename(relativePath));
+        };
+        const processDirectory = (dir) => {
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
+                const fullPath = path.join(dir, file);
+                const relativePath = path.relative(directoryPath, fullPath);
+                if (isExcluded(relativePath)) {
+                    continue;
+                }
+                if (fs.statSync(fullPath).isDirectory()) {
+                    if (allowedDirectories.length === 0 || allowedDirectories.some(allowedDir => relativePath.startsWith(allowedDir))) {
+                        processDirectory(fullPath);
+                    }
+                }
+                else {
+                    const ext = path.extname(file).toLowerCase();
+                    if (ext)
+                        extensions.add(ext);
+                }
+            }
+        };
+        processDirectory(directoryPath);
+        return extensions;
     }
     async sendConfigsToWebview(webview) {
         const config = vscode.workspace.getConfiguration('summary1');
         const configurations = config.get('configurations');
         webview.postMessage({
             command: 'setConfigs',
-            configurations
+            configurations: configurations.map(c => ({
+                ...c,
+                allowedDirectories: c.allowedDirectories.join(', '),
+                excludedDirectories: c.excludedDirectories.join(', '),
+                excludedFiles: c.excludedFiles.join(', ')
+            }))
         });
     }
     async saveConfiguration(message) {
@@ -81,9 +130,9 @@ class SummaryViewProvider {
             const newConfig = {
                 name: message.name,
                 directoryPath: message.directoryPath,
-                allowedDirectories: message.allowedDirectories ? message.allowedDirectories.split(',').map((dir) => dir.trim()) : [],
-                excludedDirectories: message.excludedDirectories ? message.excludedDirectories.split(',').map((dir) => dir.trim()) : [],
-                excludedFiles: message.excludedFiles ? message.excludedFiles.split(',').map((file) => file.trim()) : [],
+                allowedDirectories: message.allowedDirectories.split(',').map((dir) => dir.trim()),
+                excludedDirectories: message.excludedDirectories.split(',').map((dir) => dir.trim()),
+                excludedFiles: message.excludedFiles.split(',').map((file) => file.trim()),
                 extensions: message.extensions
             };
             const existingIndex = configurations.findIndex(c => c.name === newConfig.name);
@@ -94,10 +143,10 @@ class SummaryViewProvider {
                 configurations.push(newConfig);
             }
             await config.update('configurations', configurations, vscode.ConfigurationTarget.Global);
-            vscode.window.showInformationMessage('Configuration saved successfully!');
+            vscode.window.showInformationMessage('Configuración guardada correctamente');
         }
         catch (error) {
-            vscode.window.showErrorMessage(`Failed to save configuration: ${error}`);
+            vscode.window.showErrorMessage(`Error al guardar la configuración: ${error}`);
         }
     }
     async deleteConfiguration(configName) {
@@ -244,6 +293,34 @@ class SummaryViewProvider {
                         margin-left: 5px;
                         font-weight: bold;
                     }
+                    .loader-container {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        height: 70px;
+                    }
+                    .loader {
+                        border: 4px solid #f3f3f3;
+                        border-top: 4px solid #3498db;
+                        border-radius: 50%;
+                        width: 30px;
+                        height: 30px;
+                        animation: spin 1s linear infinite;
+                    }
+                    .loader-text {
+                        margin-top: 10px;
+                        font-size: 14px;
+                        color: #a0a0a0;
+                    }
+                    .extension-badge.disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
                 </style>
             </head>
             <body>
@@ -273,6 +350,10 @@ class SummaryViewProvider {
                         <input type="text" id="excludedFiles" placeholder="Ingresa los archivos excluidos">
                         
                         <label for="extensions">Extensiones de Archivo:</label>
+                        <div class="loader-container" id="loaderContainer" style="display: none;">
+                            <div class="loader"></div>
+                            <div class="loader-text">Actualizando extensiones...</div>
+                        </div>
                         <div id="extensionBadges" class="extension-badges"></div>
                         
                         <button type="submit">Guardar Configuración</button>
@@ -388,6 +469,18 @@ class SummaryViewProvider {
                     }
 
                     function toggleExtension(ext, badge) {
+                        if (!badge.classList.contains('disabled')) {
+                            if (selectedExtensions.has(ext)) {
+                                selectedExtensions.delete(ext);
+                                badge.classList.remove('selected');
+                            } else {
+                                selectedExtensions.add(ext);
+                                badge.classList.add('selected');
+                            }
+                        }
+                    }
+
+                    function toggleExtension(ext, badge) {
                         if (selectedExtensions.has(ext)) {
                             selectedExtensions.delete(ext);
                             badge.classList.remove('selected');
@@ -397,12 +490,67 @@ class SummaryViewProvider {
                         }
                     }
 
+                    function disableBadges() {
+                        const badges = extensionBadgesDiv.querySelectorAll('.extension-badge');
+                        badges.forEach(badge => {
+                            badge.classList.add('disabled');
+                            badge.onclick = null;
+                        });
+                    }
+
+                    function enableBadges() {
+                        const badges = extensionBadgesDiv.querySelectorAll('.extension-badge');
+                        badges.forEach(badge => {
+                            badge.classList.remove('disabled');
+                            badge.onclick = () => toggleExtension(badge.textContent, badge);
+                        });
+                    }
+
+                    function findExtensions() {
+                        const directoryPath = directoryPathInput.value;
+                        const allowedDirectories = allowedDirectoriesInput.value;
+                        const excludedDirectories = excludedDirectoriesInput.value;
+                        const excludedFiles = excludedFilesInput.value;
+
+                        if (directoryPath) {
+                            document.getElementById('loaderContainer').style.display = 'flex';
+                            disableBadges();
+                            const startTime = Date.now();
+                            
+                            vscode.postMessage({
+                                command: 'findExtensions',
+                                directoryPath,
+                                allowedDirectories,
+                                excludedDirectories,
+                                excludedFiles
+                            });
+
+                            window.extensionsReceived = () => {
+                                const elapsedTime = Date.now() - startTime;
+                                if (elapsedTime < 1000) {
+                                    setTimeout(() => {
+                                        document.getElementById('loaderContainer').style.display = 'none';
+                                        enableBadges();
+                                    }, 1000 - elapsedTime);
+                                } else {
+                                    document.getElementById('loaderContainer').style.display = 'none';
+                                    enableBadges();
+                                }
+                            };
+                        }
+                    }
                     window.addEventListener('message', event => {
                         const message = event.data;
                         switch (message.command) {
                             case 'setConfigs':
                                 configurations = message.configurations;
                                 updateConfigSelector();
+                                break;
+                            case 'setExtensions':
+                                updateExtensionBadges(message.extensions);
+                                if (window.extensionsReceived) {
+                                    window.extensionsReceived();
+                                }
                                 break;
                         }
                     });
@@ -422,22 +570,21 @@ class SummaryViewProvider {
                         if (selectedConfig) {
                             configNameInput.value = selectedConfig.name;
                             directoryPathInput.value = selectedConfig.directoryPath;
-                            allowedDirectoriesInput.value = selectedConfig.allowedDirectories.join(', ');
-                            excludedDirectoriesInput.value = selectedConfig.excludedDirectories && selectedConfig.excludedDirectories.length > 0
-                                ? selectedConfig.excludedDirectories.join(', ')
-                                : defaultExcludedDirectories;
-                            excludedFilesInput.value = selectedConfig.excludedFiles && selectedConfig.excludedFiles.length > 0 
-                                ? selectedConfig.excludedFiles.join(', ') 
-                                : defaultExcludedFiles;
+                            allowedDirectoriesInput.value = selectedConfig.allowedDirectories;
+                            excludedDirectoriesInput.value = selectedConfig.excludedDirectories || defaultExcludedDirectories;
+                            excludedFilesInput.value = selectedConfig.excludedFiles || defaultExcludedFiles;
                             selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
                             updateExtensionBadges(selectedConfig.extensions);
                             runSummaryButton.disabled = false;
                             deleteConfigButton.disabled = false;
+                            findExtensions();
                         } else {
                             initializeInterface();
                         }
                     });
-
+                    [directoryPathInput, allowedDirectoriesInput, excludedDirectoriesInput, excludedFilesInput].forEach(input => {
+                        input.addEventListener('change', findExtensions);
+                    });
                     document.getElementById('config-form').addEventListener('submit', (event) => {
                         event.preventDefault();
                         vscode.postMessage({
@@ -471,6 +618,7 @@ class SummaryViewProvider {
                             });
                         }
                     });
+                    vscode.postMessage({ command: 'getConfigs' });
                 </script>
             </body>
             </html>`;
