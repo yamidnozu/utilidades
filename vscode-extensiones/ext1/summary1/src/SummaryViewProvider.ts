@@ -28,8 +28,13 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
             async (message) => {
                 switch (message.command) {
                     case 'saveConfig':
-                        await this.saveConfiguration(message);
-                        await this.sendConfigsToWebview(webviewView.webview);
+                        try {
+                            const savedConfigName = await this.saveConfiguration(message);
+                            await this.sendConfigsToWebview(webviewView.webview);
+                            webviewView.webview.postMessage({ command: 'configSaved', configName: savedConfigName });
+                        } catch (error) {
+                            console.error('Error saving configuration:', error);
+                        }
                         break;
                     case 'runSummary':
                         if (message.configName) {
@@ -125,7 +130,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         });
     }
 
-    private async saveConfiguration(message: any) {
+    private async saveConfiguration(message: any): Promise<string> {
         try {
             const config = vscode.workspace.getConfiguration('summary1');
             let configurations = config.get('configurations') as ConfigurationItem[];
@@ -148,8 +153,10 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
 
             await config.update('configurations', configurations, vscode.ConfigurationTarget.Global);
             vscode.window.showInformationMessage('Configuración guardada correctamente');
+            return newConfig.name;
         } catch (error) {
             vscode.window.showErrorMessage(`Error al guardar la configuración: ${error}`);
+            throw error;
         }
     }
 
@@ -235,55 +242,70 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Configuración de Resumen</title>
+                <title>Configuración de eDev Summary</title>
                 <style>
+                    :root {
+                        --background: #1e1e1e;
+                        --foreground: #d4d4d4;
+                        --primary: #0078D4;
+                        --secondary: #3a3d41;
+                        --accent: #569cd6;
+                        --error: #f48771;
+                        --success: #89d185;
+                    }
                     body { 
                         padding: 20px; 
-                        font-family: Arial, sans-serif; 
-                        background-color: #1e1e1e;
-                        color: #d4d4d4;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+                        background-color: var(--background);
+                        color: var(--foreground);
+                        line-height: 1.6;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                        margin: 0;
                     }
                     .container {
+                        width: 100%;
+                        max-width: 600px;
                         background-color: #252526;
                         border-radius: 8px;
-                        padding: 20px;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        padding: 30px;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     }
                     h1 { 
-                        color: #0078D4; 
-                        border-bottom: 2px solid #0078D4;
-                        padding-bottom: 10px;
-                    }
-                    input, button, select { 
-                        margin-bottom: 15px; 
-                        width: 100%; 
-                        padding: 8px; 
-                        border: 1px solid #6b6b6b;
-                        border-radius: 4px;
-                        background-color: #3c3c3c;
-                        color: #d4d4d4;
-                    }
-                    button {
-                        background-color: #0078D4;
-                        color: white;
-                        border: none;
-                        cursor: pointer;
-                        transition: background-color 0.3s;
-                    }
-                    button:hover {
-                        background-color: #005a9e;
-                    }
-                    button:disabled {
-                        background-color: #505050;
-                        cursor: not-allowed;
+                        color: var(--accent);
+                        border-bottom: 2px solid var(--accent);
+                        padding-bottom: 15px;
+                        margin-bottom: 25px;
+                        text-align: center;
+                        font-size: 24px;
                     }
                     label { 
                         display: block; 
                         margin-top: 15px;
                         font-weight: bold;
+                        color: var(--accent);
+                    }
+                    input, select { 
+                        width: 100%; 
+                        padding: 10px; 
+                        margin-top: 5px;
+                        margin-bottom: 20px; 
+                        border: 1px solid var(--secondary);
+                        border-radius: 4px;
+                        background-color: var(--secondary);
+                        color: var(--foreground);
+                        font-size: 14px;
+                        box-sizing: border-box;
+                    }
+                    input:focus, select:focus {
+                        outline: none;
+                        border-color: var(--primary);
+                        box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
                     }
                     .example { 
-                        font-size: 0.8em; 
+                        font-size: 12px; 
                         color: #a0a0a0; 
                         margin-bottom: 5px;
                     }
@@ -292,43 +314,84 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         flex-wrap: wrap;
                         gap: 10px;
                         margin-top: 10px;
+                        margin-bottom: 20px;
+                        justify-content: center;
                     }
                     .extension-badge {
-                        background-color: #3c3c3c;
-                        padding: 5px 10px;
+                        background-color: var(--secondary);
+                        color: var(--foreground);
+                        padding: 8px 15px;
                         border-radius: 20px;
+                        font-size: 12px;
                         display: flex;
                         align-items: center;
                         user-select: none;
                         cursor: pointer;
+                        transition: all 0.2s ease;
                     }
                     .extension-badge.selected {
-                        background-color: #0078D4;
+                        background-color: var(--primary);
                         color: white;
                     }
-                    .extension-badge .remove {
-                        margin-left: 5px;
+                    .extension-badge:hover {
+                        background-color: var(--accent);
+                        color: var(--background);
+                    }
+                    .button-group {
+                        display: flex;
+                        gap: 15px;
+                        margin-top: 30px;
+                    }
+                    button {
+                        flex: 1;
+                        padding: 12px;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
                         font-weight: bold;
+                        transition: all 0.2s ease;
+                        font-size: 14px;
+                        text-transform: uppercase;
+                    }
+                    button[type="submit"] {
+                        background-color: var(--primary);
+                        color: white;
+                    }
+                    button[type="submit"]:hover {
+                        background-color: #005a9e;
+                    }
+                    #runSummary {
+                        background-color: var(--success);
+                        color: var(--background);
+                    }
+                    #runSummary:hover {
+                        background-color: #6abf69;
+                    }
+                    #deleteConfig {
+                        background-color: var(--error);
+                        color: white;
+                    }
+                    #deleteConfig:hover {
+                        background-color: #d9391c;
                     }
                     .loader-container {
                         display: flex;
-                        flex-direction: column;
                         justify-content: center;
                         align-items: center;
-                        height: 70px;
+                        height: 50px;
                     }
                     .loader {
-                        border: 4px solid #f3f3f3;
-                        border-top: 4px solid #3498db;
+                        border: 3px solid var(--secondary);
+                        border-top: 3px solid var(--primary);
                         border-radius: 50%;
-                        width: 30px;
-                        height: 30px;
+                        width: 24px;
+                        height: 24px;
                         animation: spin 1s linear infinite;
                     }
-                    .loader-text {
-                        margin-top: 10px;
+                    #loaderText {
+                        margin-left: 10px;
+                        color: var(--foreground);
                         font-size: 14px;
-                        color: #a0a0a0;
                     }
                     .extension-badge.disabled {
                         opacity: 0.5;
@@ -348,35 +411,37 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     </select>
                     <form id="config-form">
                         <label for="configName">Nombre de la Configuración:</label>
-                        <input type="text" id="configName" required placeholder="Ingresa el nombre de la configuración">
+                        <input type="text" id="configName" required placeholder="Ingrese el nombre de la configuración">
 
                         <label for="directoryPath">Ruta del Directorio:</label>
-                        <div class="example">Ejemplo: C:\\Proyectos\\MiProyecto</div>
-                        <input type="text" id="directoryPath" required placeholder="Ingresa la ruta del directorio base">
+                        <div class="example">Ejemplo: C:\Proyectos\MiProyecto</div>
+                        <input type="text" id="directoryPath" required placeholder="Ingrese la ruta del directorio base">
                         
-                        <label for="allowedDirectories">Directorios Permitidos (separados por comas):</label>
-                        <div class="example">Ejemplo: src/app, src/components</div>
-                        <input type="text" id="allowedDirectories" placeholder="Ingresa los directorios permitidos">
+                        <label for="allowedDirectories">Directorios Permitidos:</label>
+                        <div class="example">Ejemplo: src/app, src/componentes</div>
+                        <input type="text" id="allowedDirectories" placeholder="Ingrese los directorios permitidos (separados por comas)">
                         
-                        <label for="excludedDirectories">Directorios Excluidos (separados por comas):</label>
+                        <label for="excludedDirectories">Directorios Excluidos:</label>
                         <div class="example">Ejemplo: node_modules, dist</div>
-                        <input type="text" id="excludedDirectories" placeholder="Ingresa los directorios excluidos">
+                        <input type="text" id="excludedDirectories" placeholder="Ingrese los directorios excluidos (separados por comas)">
                         
-                        <label for="excludedFiles">Archivos Excluidos (separados por comas):</label>
+                        <label for="excludedFiles">Archivos Excluidos:</label>
                         <div class="example">Ejemplo: package-lock.json, .gitignore</div>
-                        <input type="text" id="excludedFiles" placeholder="Ingresa los archivos excluidos">
+                        <input type="text" id="excludedFiles" placeholder="Ingrese los archivos excluidos (separados por comas)">
                         
                         <label for="extensions">Extensiones de Archivo:</label>
                         <div class="loader-container" id="loaderContainer" style="display: none;">
                             <div class="loader"></div>
-                            <div class="loader-text">Actualizando extensiones...</div>
+                            <div id="loaderText" style="margin-left: 10px;">Cargando extensiones...</div>
                         </div>
                         <div id="extensionBadges" class="extension-badges"></div>
                         
-                        <button type="submit">Guardar Configuración</button>
+                        <div class="button-group">
+                            <button type="submit">Guardar</button>
+                            <button id="runSummary" type="button">Generar</button>
+                            <button id="deleteConfig" type="button">Eliminar</button>
+                        </div>
                     </form>
-                    <button id="runSummary">Generar Resumen</button>
-                    <button id="deleteConfig">Eliminar Configuración</button>
                 </div>
                 <script>
                     const vscode = acquireVsCodeApi();
@@ -480,9 +545,10 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             const badge = document.createElement('div');
                             badge.className = 'extension-badge' + (selectedExtensions.has(ext) ? ' selected' : '');
                             badge.textContent = ext;
-                            badge.onclick = () => toggleExtension(ext, badge);
+                            badge.classList.add('disabled');  // Add this line
                             extensionBadgesDiv.appendChild(badge);
                         });
+                        disableBadges();  // Ensure all badges are disabled
                     }
 
                     function toggleExtension(ext, badge) {
@@ -530,7 +596,10 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         const excludedFiles = excludedFilesInput.value;
 
                         if (directoryPath) {
-                            document.getElementById('loaderContainer').style.display = 'flex';
+                            const loaderContainer = document.getElementById('loaderContainer');
+                            const loaderText = document.getElementById('loaderText');
+                            loaderContainer.style.display = 'flex';
+                            loaderText.textContent = 'Cargando extensiones...';
                             disableBadges();
                             const startTime = Date.now();
                             
@@ -546,16 +615,17 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 const elapsedTime = Date.now() - startTime;
                                 if (elapsedTime < 1000) {
                                     setTimeout(() => {
-                                        document.getElementById('loaderContainer').style.display = 'none';
+                                        loaderContainer.style.display = 'none';
                                         enableBadges();
                                     }, 1000 - elapsedTime);
                                 } else {
-                                    document.getElementById('loaderContainer').style.display = 'none';
+                                    loaderContainer.style.display = 'none';
                                     enableBadges();
                                 }
                             };
                         }
                     }
+
                     window.addEventListener('message', event => {
                         const message = event.data;
                         switch (message.command) {
@@ -565,9 +635,13 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 break;
                             case 'setExtensions':
                                 updateExtensionBadges(message.extensions);
+                                document.getElementById('loaderText').textContent = 'Actualizando extensiones...';
                                 if (window.extensionsReceived) {
                                     window.extensionsReceived();
                                 }
+                                break;
+                            case 'configSaved':
+                                configSelector.value = message.configName;
                                 break;
                         }
                     });
@@ -638,6 +712,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     vscode.postMessage({ command: 'getConfigs' });
                 </script>
             </body>
-            </html>`;
+            </html>
+        `;
     }
 }
