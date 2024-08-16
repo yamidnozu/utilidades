@@ -9,3 +9,4 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Initial release
 - Ajustes en la forma como toma y genera el resumen.
 - Se agrega directorios y archivos excluidos por defecto
+- Se ajusta y soluciona problemas de actualizaciones de extensiones y guardado
