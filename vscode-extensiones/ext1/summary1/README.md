@@ -62,7 +62,8 @@ eDev Summary es una extensión para Visual Studio Code diseñada para crear un a
     "allowedDirectories": ["src/components", "src/pages"],
     "excludedDirectories": ["node_modules", "build"],
     "excludedFiles": ["*.test.js", "config.js"],
-    "extensions": [".js", ".jsx", ".css"]
+    "extensions": [".js", ".jsx", ".css"],
+    "showAllExtensions": false
   }
   ```
 
@@ -75,6 +76,15 @@ eDev Summary es una extensión para Visual Studio Code diseñada para crear un a
   ```
   Extensiones encontradas: 🏷️ .js  🏷️ .jsx  🏷️ .css  🏷️ .html  🏷️ .json
   Extensiones seleccionadas: ✅ .js  ✅ .jsx  ✅ .css
+  ```
+
+### 7. Toggle para Mostrar Todas las Combinaciones de Extensiones
+- Un nuevo toggle permite a los usuarios elegir entre mostrar solo las extensiones principales o todas las combinaciones de extensiones.
+- Cuando está activado, muestra extensiones compuestas como `.d.ts` o `.test.js`.
+- Útil para proyectos con nomenclaturas de archivo complejas o múltiples extensiones.
+- Ejemplo con el toggle activado:
+  ```
+  Extensiones encontradas: 🏷️ .js  🏷️ .jsx  🏷️ .css  🏷️ .html  🏷️ .json  🏷️ .d.ts  🏷️ .test.js
   ```
 
 ## Proceso de Análisis y Resumen
@@ -90,6 +100,7 @@ eDev Summary es una extensión para Visual Studio Code diseñada para crear un a
 3. **Análisis Inicial de Extensiones**:
    - Escanea todos los archivos dentro del ámbito definido.
    - Identifica y muestra todas las extensiones de archivo encontradas.
+   - Si el toggle "Mostrar todas las combinaciones de extensiones" está activado, incluye extensiones compuestas.
 
 4. **Selección de Extensiones por el Usuario**:
    - Presenta las extensiones encontradas al usuario.
@@ -110,6 +121,7 @@ eDev Summary es una extensión para Visual Studio Code diseñada para crear un a
 - Carpetas permitidas: [vacío]
 - Directorios excluidos: [vacío]
 - Archivos excluidos: [vacío]
+- Mostrar todas las combinaciones de extensiones: No
 
 **Comportamiento:**
 - Analiza todos los archivos y carpetas desde la ruta principal.
@@ -144,11 +156,13 @@ Resultado (si se seleccionan todas las extensiones):
 - Carpetas permitidas: `src/components`, `src/pages`
 - Directorios excluidos: `src/components/deprecated`
 - Archivos excluidos: `*.test.js`
+- Mostrar todas las combinaciones de extensiones: Sí
 
 **Comportamiento:**
 - Analiza solo las carpetas `components` y `pages` dentro de `src`.
 - Excluye la carpeta `deprecated` dentro de `components`.
 - No incluye archivos de prueba (*.test.js).
+- Muestra extensiones compuestas como `.test.js` (aunque estén excluidas).
 
 **Ejemplo de Estructura:**
 ```
@@ -168,7 +182,7 @@ C:/proyectos/mi-aplicacion-web
 └── 📁 public/                    (no analizado)
     └── 📄 index.html
 
-Extensiones encontradas: 🏷️ .js
+Extensiones encontradas: 🏷️ .js  🏷️ .test.js
 
 Resultado (si se selecciona .js):
 - Incluirá Header.js, Footer.js, Home.js, y About.js en RESUMEN.txt
@@ -181,10 +195,12 @@ Resultado (si se selecciona .js):
 - Carpetas permitidas: `src`
 - Directorios excluidos: [vacío]
 - Archivos excluidos: [vacío]
+- Mostrar todas las combinaciones de extensiones: Sí
 
 **Comportamiento:**
 - Analiza toda la carpeta `src` y sus subcarpetas.
 - El usuario selecciona solo ciertas extensiones para incluir.
+- Muestra todas las combinaciones de extensiones encontradas.
 
 **Ejemplo de Estructura:**
 ```
@@ -220,11 +236,13 @@ Resultado:
 - Carpetas permitidas: `frontend/src`, `backend/src`
 - Directorios excluidos: `frontend/src/assets`, `backend/src/tests`
 - Archivos excluidos: `*.config.js`
+- Mostrar todas las combinaciones de extensiones: Sí
 
 **Comportamiento:**
 - Analiza las carpetas `src` tanto del frontend como del backend.
 - Excluye carpetas de assets y tests.
 - No incluye archivos de configuración.
+- Muestra todas las combinaciones de extensiones, incluyendo `.config.js` (aunque estén excluidos).
 
 **Ejemplo de Estructura:**
 ```
@@ -250,7 +268,7 @@ C:/proyectos/app-fullstack
 ├── 📄 frontend.config.js         (excluido)
 └── 📄 backend.config.js          (excluido)
 
-Extensiones encontradas: 🏷️ .js  🏷️ .svg
+Extensiones encontradas: 🏷️ .js  🏷️ .svg  🏷️ .test.js  🏷️ .config.js
 
 Extensiones seleccionadas por el usuario: ✅ .js
 
@@ -289,6 +307,11 @@ Resultado:
    - Realiza validaciones básicas de los campos de entrada para prevenir errores.
    - Ejemplo: Verifica que se haya seleccionado una configuración antes de ejecutar el resumen y muestra un mensaje de error si no es así.
 
+7. **Toggle para Mostrar Todas las Combinaciones de Extensiones**
+   - Permite a los usuarios ver y seleccionar extensiones de archivo más específicas.
+   - Útil para proyectos con nomenclaturas de archivo complejas o múltiples extensiones.
+   - Ejemplo: Muestra `.test.js` y `.config.js` además de `.js` cuando está activado.
+
 ## Instalación
 1. Abre Visual Studio Code
 2. Ve a la pestaña de Extensiones (Ctrl+Shift+X)
@@ -299,23 +322,14 @@ Resultado:
 
 1. Abre la vista de eDev Summary en la barra de actividad lateral de VSCode.
 2. Crea una nueva configuración o selecciona una existente.
-3. Configura los parámetros según tus necesidades (ruta del proyecto, carpetas permitidas, exclusiones, etc.).
-4. Selecciona las extensiones de archivo que deseas incluir en el resumen.
-5. Haz clic en "Generar Resumen" para crear el archivo RESUMEN.txt.
-
-## Conclusión
-
-eDev Summary ofrece una manera flexible y potente de crear resúmenes de proyectos, permitiendo a los desarrolladores enfocarse en las partes más relevantes de su código. Con un control granular sobre qué se incluye en el resumen final, la herramienta se adapta a una variedad de estructuras de proyecto y necesidades de análisis.
-
-Características clave:
-- Análisis personalizable basado en carpetas específicas o todo el proyecto.
-- Exclusión de directorios y archivos no deseados.
-- Selección de extensiones de archivo para un resumen más preciso.
-- Capacidad de guardar y reutilizar configuraciones para diferentes escenarios.
-- Interfaz gráfica intuitiva integrada en VSCode.
-- Análisis dinámico de extensiones de archivo presentes en el proyecto.
-
-El resultado es un archivo `RESUMEN.txt` que proporciona una visión general clara y estructurada del código fuente del proyecto, facilitando la comprensión rápida de la estructura y contenido del proyecto para desarrolladores, revisores de código, o cualquier persona que necesite una visión general del código.
+3. Configura los parámetros según tus necesidades:
+   - Ruta del proyecto
+   - Carpetas permitidas
+   - Directorios y archivos excluidos
+   - Activa o desactiva el toggle "Mostrar todas las combinaciones de extensiones"
+4. La extensión analizará automáticamente las extensiones presentes en el proyecto.
+5. Selecciona las extensiones de archivo que deseas incluir en el resumen.
+6. Haz clic en "Generar Resumen" para crear el archivo RESUMEN.txt.
 
 ## Consejos y Trucos
 
@@ -329,7 +343,8 @@ El resultado es un archivo `RESUMEN.txt` que proporciona una visión general cla
      "allowedDirectories": ["src", "config"],
      "excludedDirectories": ["node_modules"],
      "excludedFiles": ["*.prod.js"],
-     "extensions": [".js", ".ts", ".json"]
+     "extensions": [".js", ".ts", ".json"],
+     "showAllExtensions": false
    }
    ```
 
@@ -341,13 +356,16 @@ El resultado es un archivo `RESUMEN.txt` que proporciona una visión general cla
      "allowedDirectories": ["src/components", "src/pages"],
      "excludedDirectories": [],
      "excludedFiles": [],
-     "extensions": [".js", ".jsx", ".css"]
+     "extensions": [".js", ".jsx", ".css"],
+     "showAllExtensions": true
    }
    ```
 
 4. **Integración con Control de Versiones**: Considera incluir tu configuración de eDev Summary en el control de versiones para compartirla con tu equipo.
 
 5. **Actualización Regular**: Revisa y actualiza tus configuraciones después de cambios significativos en la estructura del proyecto.
+
+6. **Uso del Toggle de Extensiones**: Activa el toggle "Mostrar todas las combinaciones de extensiones" cuando trabajes en proyectos con nomenclaturas de archivo complejas o si necesitas un control más granular sobre las extensiones incluidas en el resumen.
 
 ## Preguntas Frecuentes
 
@@ -366,10 +384,14 @@ R: eDev Summary está optimizado para manejar archivos de tamaño razonable. Par
 **P: ¿Puedo usar expresiones regulares en los nombres de archivos excluidos?**
 R: Sí, puedes usar patrones glob como `*.log` o `test_*.py` en los campos de exclusión.
 
+**P: ¿Qué hace el toggle "Mostrar todas las combinaciones de extensiones"?**
+R: Este toggle permite mostrar todas las posibles combinaciones de extensiones de archivo en tu proyecto. Por ejemplo, en lugar de mostrar solo `.js`, también mostrará extensiones como `.test.js` o `.config.js`. Esto es útil para proyectos con estructuras de archivo más complejas o cuando necesitas un control más preciso sobre qué tipos de archivo incluir en tu resumen.
+
 ## Limitaciones Conocidas
 
 - La extensión está optimizada para proyectos de tamaño medio. Para proyectos muy grandes, considera crear múltiples configuraciones para diferentes partes del proyecto.
 - El resumen incluye el contenido completo de los archivos seleccionados. Para archivos muy grandes, esto podría resultar en un RESUMEN.txt extenso.
+- Cuando se activa "Mostrar todas las combinaciones de extensiones", el análisis puede tardar más tiempo en proyectos con muchos archivos y extensiones variadas.
 
 ## Soporte y Contribuciones
 
