@@ -22,9 +22,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SummaryViewProvider = void 0;
 const fs = __importStar(require("fs"));
+const micromatch_1 = __importDefault(require("micromatch"));
 const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
 class SummaryViewProvider {
@@ -39,7 +43,14 @@ class SummaryViewProvider {
         webviewView.webview.onDidReceiveMessage(async (message) => {
             switch (message.command) {
                 case 'saveConfig':
-                    await this.saveConfiguration(message);
+                    try {
+                        const savedConfigName = await this.saveConfiguration(message);
+                        await this.sendConfigsToWebview(webviewView.webview);
+                        webviewView.webview.postMessage({ command: 'configSaved', configName: savedConfigName });
+                    }
+                    catch (error) {
+                        console.error('Error saving configuration:', error);
+                    }
                     break;
                 case 'runSummary':
                     if (message.configName) {
@@ -61,62 +72,145 @@ class SummaryViewProvider {
                         vscode.window.showErrorMessage('No configuration selected for deletion.');
                     }
                     break;
-                case 'scanDirectory':
-                    const extensions = await this.scanDirectoryForExtensions(message.directoryPath);
-                    webviewView.webview.postMessage({ command: 'setExtensions', extensions });
+                case 'findExtensions':
+                    try {
+                        const extensions = await this.findExtensions(message.directoryPath, message.allowedDirectories.split(',').map((dir) => dir.trim()), message.excludedDirectories.split(',').map((dir) => dir.trim()), message.excludedFiles.split(',').map((file) => file.trim()));
+                        webviewView.webview.postMessage({
+                            command: 'setExtensions',
+                            extensions: Array.from(extensions)
+                        });
+                    }
+                    catch (error) {
+                        console.error('Error finding extensions:', error);
+                        webviewView.webview.postMessage({
+                            command: 'setExtensions',
+                            extensions: []
+                        });
+                    }
                     break;
             }
         });
         this.sendConfigsToWebview(webviewView.webview);
     }
-    async scanDirectoryForExtensions(directoryPath) {
+    async findExtensions(directoryPath, allowedDirectories, excludedDirectories, excludedFiles) {
         const extensions = new Set();
-        const config = vscode.workspace.getConfiguration('summary1');
-        const configurations = config.get('configurations');
-        const currentConfig = configurations.find(c => c.directoryPath === directoryPath);
-        const excludedDirectories = currentConfig ? currentConfig.excludedDirectories : [];
-        const scanDir = async (dir) => {
-            const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-            for (const entry of entries) {
-                const fullPath = path.join(dir, entry.name);
-                const relativePath = path.relative(directoryPath, fullPath);
-                if (excludedDirectories.some(excludedDir => relativePath.startsWith(excludedDir))) {
+        const isExcluded = (relativePath) => {
+            const normalizedPath = this.normalizePath(relativePath);
+            return micromatch_1.default.isMatch(normalizedPath, excludedDirectories.map(this.normalizePath)) ||
+                micromatch_1.default.isMatch(path.basename(normalizedPath), excludedFiles);
+        };
+        const processDirectory = (dir, basePath) => {
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
+                const fullPath = path.join(dir, file);
+                const relativePath = path.relative(basePath, fullPath);
+                if (isExcluded(relativePath)) {
                     continue;
                 }
-                if (entry.isDirectory()) {
-                    await scanDir(fullPath);
+                if (fs.statSync(fullPath).isDirectory()) {
+                    processDirectory(fullPath, basePath); // Recursively process subdirectories
                 }
-                else if (entry.isFile()) {
-                    const ext = path.extname(entry.name).toLowerCase();
-                    if (ext) {
+                else {
+                    const ext = path.extname(file).toLowerCase();
+                    if (ext)
                         extensions.add(ext);
-                    }
                 }
             }
         };
+        if (allowedDirectories.length > 0) {
+            for (const allowedDir of allowedDirectories) {
+                const fullAllowedPath = path.join(directoryPath, allowedDir);
+                if (fs.existsSync(fullAllowedPath)) {
+                    processDirectory(fullAllowedPath, directoryPath);
+                }
+            }
+        }
+        else {
+            processDirectory(directoryPath, directoryPath);
+        }
+        return extensions;
+    }
+    async runSummary(configName) {
+        const config = vscode.workspace.getConfiguration('summary1');
+        const configurations = config.get('configurations');
+        const selectedConfig = configurations.find(c => c.name === configName);
+        if (!selectedConfig) {
+            vscode.window.showErrorMessage('Configuración seleccionada no encontrada.');
+            return;
+        }
+        const { directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions } = selectedConfig;
+        if (!directoryPath || extensions.length === 0) {
+            vscode.window.showErrorMessage('Por favor, configure todos los ajustes antes de generar el resumen.');
+            return;
+        }
         try {
-            await scanDir(directoryPath);
+            const summaryContent = await this.generateSummary(directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions);
+            if (summaryContent.trim() === '') {
+                vscode.window.showErrorMessage('No se encontró contenido para el resumen. Verifique las extensiones y directorios seleccionados.');
+                return;
+            }
+            const summaryPath = path.join(directoryPath, 'RESUMEN.TXT');
+            fs.writeFileSync(summaryPath, summaryContent);
+            vscode.window.showInformationMessage(`Resumen completado con éxito! Guardado en ${summaryPath}`);
         }
         catch (error) {
-            console.error('Error scanning directory:', error);
+            vscode.window.showErrorMessage(`Error al generar el resumen: ${error}`);
         }
-        return Array.from(extensions);
+    }
+    async generateSummary(directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions) {
+        let summaryContent = '';
+        const isExcluded = (relativePath) => {
+            const normalizedPath = this.normalizePath(relativePath);
+            return micromatch_1.default.isMatch(normalizedPath, excludedDirectories.map(this.normalizePath)) ||
+                micromatch_1.default.isMatch(path.basename(normalizedPath), excludedFiles);
+        };
+        const processDirectory = (dir, basePath) => {
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
+                const fullPath = path.join(dir, file);
+                const relativePath = path.relative(basePath, fullPath);
+                if (isExcluded(relativePath)) {
+                    continue;
+                }
+                if (fs.statSync(fullPath).isDirectory()) {
+                    processDirectory(fullPath, basePath); // Recursively process subdirectories
+                }
+                else if (extensions.includes(path.extname(file).toLowerCase())) {
+                    const content = fs.readFileSync(fullPath, 'utf8');
+                    summaryContent += `\n/* Inicio ${relativePath} */\n${content}\n/* Fin ${relativePath} */\n`;
+                }
+            }
+        };
+        if (allowedDirectories.length > 0) {
+            for (const allowedDir of allowedDirectories) {
+                const fullAllowedPath = path.join(directoryPath, allowedDir);
+                if (fs.existsSync(fullAllowedPath)) {
+                    processDirectory(fullAllowedPath, directoryPath);
+                }
+            }
+        }
+        else {
+            processDirectory(directoryPath, directoryPath);
+        }
+        return summaryContent;
+    }
+    normalizePath(inputPath) {
+        let normalized = inputPath.replace(/\\/g, '/');
+        normalized = normalized.replace(/([^:])\/+/g, '$1/');
+        return normalized;
     }
     async sendConfigsToWebview(webview) {
         const config = vscode.workspace.getConfiguration('summary1');
         const configurations = config.get('configurations');
-        configurations.forEach(conf => {
-            conf.extensions = conf.extensions.map(ext => ext.toLowerCase());
-        });
         webview.postMessage({
             command: 'setConfigs',
-            configurations
+            configurations: configurations.map(c => ({
+                ...c,
+                allowedDirectories: c.allowedDirectories.join(', '),
+                excludedDirectories: c.excludedDirectories.join(', '),
+                excludedFiles: c.excludedFiles.join(', ')
+            }))
         });
-        // Scan for extensions if there's at least one configuration
-        if (configurations.length > 0) {
-            const extensions = await this.scanDirectoryForExtensions(configurations[0].directoryPath);
-            webview.postMessage({ command: 'setExtensions', extensions });
-        }
     }
     async saveConfiguration(message) {
         try {
@@ -127,6 +221,7 @@ class SummaryViewProvider {
                 directoryPath: message.directoryPath,
                 allowedDirectories: message.allowedDirectories.split(',').map((dir) => dir.trim()),
                 excludedDirectories: message.excludedDirectories.split(',').map((dir) => dir.trim()),
+                excludedFiles: message.excludedFiles.split(',').map((file) => file.trim()),
                 extensions: message.extensions
             };
             const existingIndex = configurations.findIndex(c => c.name === newConfig.name);
@@ -137,10 +232,12 @@ class SummaryViewProvider {
                 configurations.push(newConfig);
             }
             await config.update('configurations', configurations, vscode.ConfigurationTarget.Global);
-            vscode.window.showInformationMessage('Configuration saved successfully!');
+            vscode.window.showInformationMessage('Configuración guardada correctamente');
+            return newConfig.name;
         }
         catch (error) {
-            vscode.window.showErrorMessage(`Failed to save configuration: ${error}`);
+            vscode.window.showErrorMessage(`Error al guardar la configuración: ${error}`);
+            throw error;
         }
     }
     async deleteConfiguration(configName) {
@@ -149,61 +246,11 @@ class SummaryViewProvider {
             let configurations = config.get('configurations');
             configurations = configurations.filter(c => c.name !== configName);
             await config.update('configurations', configurations, vscode.ConfigurationTarget.Global);
-            vscode.window.showInformationMessage('Configuration deleted successfully!');
+            vscode.window.showInformationMessage('Configuración eliminada exitosamente');
         }
         catch (error) {
-            vscode.window.showErrorMessage(`Failed to delete configuration: ${error}`);
+            vscode.window.showErrorMessage(`Error al eliminar la configuración: ${error}`);
         }
-    }
-    async runSummary(configName) {
-        const config = vscode.workspace.getConfiguration('summary1');
-        const configurations = config.get('configurations');
-        const selectedConfig = configurations.find(c => c.name === configName);
-        if (!selectedConfig) {
-            vscode.window.showErrorMessage('Selected configuration not found.');
-            return;
-        }
-        const { directoryPath, allowedDirectories, excludedDirectories, extensions } = selectedConfig;
-        if (!directoryPath || allowedDirectories.length === 0 || extensions.length === 0) {
-            vscode.window.showErrorMessage('Please configure all settings before running the summary.');
-            return;
-        }
-        try {
-            const summaryContent = await this.generateSummary(directoryPath, allowedDirectories, excludedDirectories, extensions);
-            const summaryPath = path.join(directoryPath, 'RESUMEN.TXT');
-            fs.writeFileSync(summaryPath, summaryContent);
-            vscode.window.showInformationMessage(`Summary completed successfully! Saved to ${summaryPath}`);
-        }
-        catch (error) {
-            vscode.window.showErrorMessage(`Failed to run summary: ${error}`);
-        }
-    }
-    async generateSummary(directoryPath, allowedDirectories, excludedDirectories, extensions) {
-        let summaryContent = '';
-        const isExcluded = (relativePath) => {
-            return excludedDirectories.some(excludedDir => relativePath === excludedDir || relativePath.startsWith(excludedDir + path.sep));
-        };
-        const processDirectory = (dir) => {
-            const files = fs.readdirSync(dir);
-            for (const file of files) {
-                const fullPath = path.join(dir, file);
-                const relativePath = path.relative(directoryPath, fullPath);
-                if (isExcluded(relativePath)) {
-                    continue;
-                }
-                if (fs.statSync(fullPath).isDirectory()) {
-                    if (allowedDirectories.some(allowedDir => relativePath.startsWith(allowedDir))) {
-                        processDirectory(fullPath);
-                    }
-                }
-                else if (extensions.includes(path.extname(file))) {
-                    const content = fs.readFileSync(fullPath, 'utf8');
-                    summaryContent += `\n/* Inicio ${relativePath} */\n${content}\n/* Fin */\n`;
-                }
-            }
-        };
-        processDirectory(directoryPath);
-        return summaryContent;
     }
     getWebviewContent(webview) {
         return `
@@ -212,253 +259,434 @@ class SummaryViewProvider {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Configuración de</title>
+                <title>Configuración de eDev Summary</title>
                 <style>
+                    :root {
+                        --background: #1e1e1e;
+                        --foreground: #e0e0e0;
+                        --primary: #2c2c2c;
+                        --secondary: #383838;
+                        --highlight: #2d8ce2; 
+                        --badge-default: #6a6a6a; 
+                        --accent: #6a6a6a;
+                        --error: #b85c5c;
+                        --success: #4caf50;
+                    }
                     body { 
-                        padding: 20px; 
-                        font-family: Arial, sans-serif; 
-                        background-color: #1e1e1e;
-                        color: #d4d4d4;
+                        padding: 10px; 
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+                        background-color: var(--background);
+                        color: var(--foreground);
+                        line-height: 1.4;
+                        margin: 0;
                     }
                     .container {
-                        background-color: #252526;
-                        border-radius: 8px;
-                        padding: 20px;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        max-width: 500px;
+                        background-color: var(--primary);
+                        border-radius: 6px;
+                        padding: 15px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
                     }
                     h1 { 
-                        color: #0078D4; 
-                        border-bottom: 2px solid #0078D4;
-                        padding-bottom: 10px;
-                    }
-                    input, button, select { 
-                        margin-bottom: 15px; 
-                        width: 100%; 
-                        padding: 8px; 
-                        border: 1px solid #6b6b6b;
-                        border-radius: 4px;
-                        background-color: #3c3c3c;
-                        color: #d4d4d4;
-                    }
-                    button {
-                        background-color: #0078D4;
-                        color: white;
-                        border: none;
-                        cursor: pointer;
-                        transition: background-color 0.3s;
-                    }
-                    button:hover {
-                        background-color: #005a9e;
-                    }
-                    button:disabled {
-                        background-color: #505050;
-                        cursor: not-allowed;
+                        color: var(--foreground);
+                        margin-bottom: 15px;
+                        text-align: center;
+                        font-size: 18px;
                     }
                     label { 
                         display: block; 
-                        margin-top: 15px;
+                        margin-top: 8px;
                         font-weight: bold;
+                        color: var(--highlight);
                     }
-                    .example { 
-                        font-size: 0.8em; 
-                        color: #a0a0a0; 
-                        margin-bottom: 5px;
+                    input, select { 
+                        width: 100%; 
+                        padding: 6px; 
+                        margin-top: 4px;
+                        margin-bottom: 12px; 
+                        border: 1px solid var(--highlight);
+                        border-radius: 3px;
+                        background-color: var(--secondary);
+                        color: var(--foreground);
+                        font-size: 13px;
+                        box-sizing: border-box;
+                    }
+                    input:focus, select:focus {
+                        outline: none;
+                        border-color: var(--highlight);
+                        box-shadow: 0 0 0 2px rgba(45, 140, 226, 0.5);
                     }
                     .extension-badges {
                         display: flex;
                         flex-wrap: wrap;
-                        gap: 10px;
-                        margin-top: 10px;
+                        gap: 6px;
+                        margin-top: 8px;
                     }
                     .extension-badge {
-                        background-color: #3c3c3c;
+                        background-color: var(--badge-default); /* Color gris por defecto */
+                        color: var(--foreground);
                         padding: 5px 10px;
-                        border-radius: 20px;
+                        border-radius: 12px;
+                        font-size: 12px;
                         display: flex;
                         align-items: center;
                         user-select: none;
                         cursor: pointer;
+                        transition: background-color 0.2s ease;
                     }
                     .extension-badge.selected {
-                        background-color: #0078D4;
+                        background-color: var(--highlight); /* Cambia a azul cuando se selecciona */
+                    }
+                    .extension-badge.disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                    }
+                    .button-group {
+                        display: flex;
+                        gap: 10px;
+                        margin-top: 15px;
+                    }
+                    button {
+                        flex: 1;
+                        padding: 10px;
+                        border: none;
+                        border-radius: 3px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        transition: background-color 0.2s ease;
+                        font-size: 13px;
+                        background-color: var(--highlight);
                         color: white;
                     }
-                    .extension-badge .remove {
-                        margin-left: 5px;
-                        font-weight: bold;
+                    button:hover {
+                        background-color: #1b6fb2;
                     }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>Configurar Extensión</h1>
-                <select id="configSelector">
-                    <option value="">Crear nueva configuración</option>
-                </select>
-                <form id="config-form">
-                    <label for="configName">Nombre de la Configuración:</label>
-                    <input type="text" id="configName" required placeholder="Ingresa el nombre de la configuración">
-
-                    <label for="directoryPath">Ruta del Directorio:</label>
-                    <div class="example">Ejemplo: C:\\Proyectos\\MiProyecto</div>
-                    <input type="text" id="directoryPath" required placeholder="Ingresa la ruta del directorio base">
-                    
-                    <label for="allowedDirectories">Directorios Permitidos (separados por comas):</label>
-                    <div class="example">Ejemplo: src/app, src/components</div>
-                    <input type="text" id="allowedDirectories" required placeholder="Ingresa los directorios permitidos">
-                    
-                    <label for="excludedDirectories">Directorios Excluidos (separados por comas):</label>
-                    <div class="example">Ejemplo: node_modules, dist</div>
-                    <input type="text" id="excludedDirectories" placeholder="Ingresa los directorios excluidos">
-                    
-                    <label for="extensions">Extensiones de Archivo:</label>
-                    <div id="extensionBadges" class="extension-badges"></div>
-                    
-                    <button type="submit">Guardar Configuración</button>
-                </form>
-                <button id="runSummary">Generar Resumen</button>
-                <button id="deleteConfig">Eliminar Configuración</button>
-            </div>
-            <script>
-                const vscode = acquireVsCodeApi();
-                const configSelector = document.getElementById('configSelector');
-                const configNameInput = document.getElementById('configName');
-                const directoryPathInput = document.getElementById('directoryPath');
-                const allowedDirectoriesInput = document.getElementById('allowedDirectories');
-                const excludedDirectoriesInput = document.getElementById('excludedDirectories');
-                const extensionBadgesDiv = document.getElementById('extensionBadges');
-                const runSummaryButton = document.getElementById('runSummary');
-                const deleteConfigButton = document.getElementById('deleteConfig');
-
-                let configurations = [];
-                let selectedExtensions = new Set();
-
-                vscode.postMessage({ command: 'getConfigs' });
-
-                directoryPathInput.addEventListener('input', debounce(async () => {
-                    const directoryPath = directoryPathInput.value;
-                    if (directoryPath) {
-                        vscode.postMessage({ command: 'scanDirectory', directoryPath });
+                    .loader-container {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 40px;
                     }
-                }, 500));
-
-                function debounce(func, wait) {
-                    let timeout;
-                    return function executedFunction(...args) {
-                        const later = () => {
-                            clearTimeout(timeout);
-                            func(...args);
-                        };
-                        clearTimeout(timeout);
-                        timeout = setTimeout(later, wait);
-                    };
-                }
-
-                function updateExtensionBadges(extensions) {
-                    extensionBadgesDiv.innerHTML = '';
-                    extensions.forEach(ext => {
-                        const badge = document.createElement('div');
-                        badge.className = 'extension-badge' + (selectedExtensions.has(ext) ? ' selected' : '');
-                        badge.textContent = ext;
-                        badge.onclick = () => toggleExtension(ext, badge);
-                        extensionBadgesDiv.appendChild(badge);
-                    });
-                }
-
-                function toggleExtension(ext, badge) {
-                    if (selectedExtensions.has(ext)) {
-                        selectedExtensions.delete(ext);
-                        badge.classList.remove('selected');
-                    } else {
-                        selectedExtensions.add(ext);
-                        badge.classList.add('selected');
+                    .loader {
+                        border: 3px solid var(--primary);
+                        border-top: 3px solid var(--highlight);
+                        border-radius: 50%;
+                        width: 20px;
+                        height: 20px;
+                        animation: spin 1s linear infinite;
                     }
-                }
-
-                window.addEventListener('message', event => {
-                    const message = event.data;
-                    switch (message.command) {
-                        case 'setConfigs':
-                            configurations = message.configurations;
-                            updateConfigSelector();
-                            break;
-                        case 'setExtensions':
-                            updateExtensionBadges(message.extensions);
-                            break;
+                    #loaderText {
+                        margin-left: 10px;
+                        color: var(--foreground);
+                        font-size: 13px;
                     }
-                });
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Configurar Extensión</h1>
+                    <select id="configSelector">
+                        <option value="">Crear nueva configuración</option>
+                    </select>
+                    <form id="config-form">
+                        <label for="configName">Nombre de la Configuración:</label>
+                        <input type="text" id="configName" required placeholder="Ingrese el nombre de la configuración">
 
-                function updateConfigSelector() {
-                    configSelector.innerHTML = '<option value="">Crear nueva configuración</option>';
-                    configurations.forEach(config => {
-                        const option = document.createElement('option');
-                        option.value = config.name;
-                        option.textContent = config.name;
-                        configSelector.appendChild(option);
-                    });
-                }
+                        <label for="directoryPath">Ruta del Directorio:</label>
+                        <div class="example">Ejemplo: C:/Proyectos/MiProyecto</div>
+                        <input type="text" id="directoryPath" required placeholder="Ingrese la ruta del directorio base">
+                        
+                        <label for="allowedDirectories">Directorios Permitidos:</label>
+                        <div class="example">Ejemplo: src/app, src/componentes</div>
+                        <input type="text" id="allowedDirectories" placeholder="Ingrese los directorios permitidos (separados por comas)">
+                        
+                        <label for="excludedDirectories">Directorios Excluidos:</label>
+                        <div class="example">Ejemplo: node_modules, dist</div>
+                        <input type="text" id="excludedDirectories" placeholder="Ingrese los directorios excluidos (separados por comas)">
+                        
+                        <label for="excludedFiles">Archivos Excluidos:</label>
+                        <div class="example">Ejemplo: package-lock.json, .gitignore</div>
+                        <input type="text" id="excludedFiles" placeholder="Ingrese los archivos excluidos (separados por comas)">
+                        
+                        <label for="extensions">Extensiones de Archivo:</label>
+                        <div class="loader-container" id="loaderContainer" style="display: none;">
+                            <div class="loader"></div>
+                            <div id="loaderText" style="margin-left: 10px;">Cargando extensiones...</div>
+                        </div>
+                        <div id="extensionBadges" class="extension-badges"></div>
+                        
+                        <div class="button-group">
+                            <button type="submit">Guardar</button>
+                            <button id="runSummary" type="button">Generar</button>
+                            <button id="deleteConfig" type="button">Eliminar</button>
+                        </div>
+                    </form>
+                </div>
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    const configSelector = document.getElementById('configSelector');
+                    const configNameInput = document.getElementById('configName');
+                    const directoryPathInput = document.getElementById('directoryPath');
+                    const allowedDirectoriesInput = document.getElementById('allowedDirectories');
+                    const excludedDirectoriesInput = document.getElementById('excludedDirectories');
+                    const excludedFilesInput = document.getElementById('excludedFiles');
+                    const extensionBadgesDiv = document.getElementById('extensionBadges');
+                    const runSummaryButton = document.getElementById('runSummary');
+                    const deleteConfigButton = document.getElementById('deleteConfig');
 
-                configSelector.addEventListener('change', (event) => {
-                    const selectedConfig = configurations.find(c => c.name === event.target.value);
-                    if (selectedConfig) {
-                        configNameInput.value = selectedConfig.name;
-                        directoryPathInput.value = selectedConfig.directoryPath;
-                        allowedDirectoriesInput.value = selectedConfig.allowedDirectories.join(', ');
-                        excludedDirectoriesInput.value = selectedConfig.excludedDirectories.join(', ');
-                        selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
-                        vscode.postMessage({ command: 'scanDirectory', directoryPath: selectedConfig.directoryPath });
-                        runSummaryButton.disabled = false;
-                        deleteConfigButton.disabled = false;
-                    } else {
+                    let configurations = [];
+                    let selectedExtensions = new Set();
+
+                    // Valores por defecto
+                    const defaultExcludedDirectories = [
+                            'node_modules',
+                            '.git',
+                            'dist',
+                            'build',
+                            'out',
+                            'target',
+                            '.idea',
+                            '.vscode',
+                            '.gradle',
+                            'bin',
+                            'obj',
+                            'logs',
+                            'temp',
+                            'tmp',
+                            'cache',
+                            'coverage',
+                            '__pycache__',
+                            'venv',
+                            'env',
+                            '.next',
+                            '.nuxt',
+                            'vendor'
+                        ].join(', ');
+                        const defaultExcludedFiles = [
+                            'package-lock.json',
+                            '.gitignore',
+                            '.DS_Store',
+                            'Thumbs.db',
+                            '*.log',
+                            '*.tmp',
+                            '*.temp',
+                            '*.swp',
+                            '*.bak',
+                            '*.class',
+                            '*.pyc',
+                            '*.pyo',
+                            '*.exe',
+                            '*.dll',
+                            '*.obj',
+                            '*.o',
+                            '*.a',
+                            '*.lib',
+                            '*.so',
+                            '*.dylib',
+                            '*.ncb',
+                            '*.sdf',
+                            '*.suo',
+                            '*.pdb',
+                            '*.idb',
+                            '.env',
+                            '.env.local',
+                            '.env.development.local',
+                            '.env.test.local',
+                            '.env.production.local',
+                            'npm-debug.log*',
+                            'yarn-debug.log*',
+                            'yarn-error.log*',
+                            '.pnp.*',
+                            '*.sqlite'
+                        ].join(', ');
+
+                    // Función para inicializar la interfaz
+                    function initializeInterface() {
                         configNameInput.value = '';
                         directoryPathInput.value = '';
                         allowedDirectoriesInput.value = '';
-                        excludedDirectoriesInput.value = '';
+                        excludedDirectoriesInput.value = defaultExcludedDirectories;
+                        excludedFilesInput.value = defaultExcludedFiles;
                         selectedExtensions.clear();
                         extensionBadgesDiv.innerHTML = '';
                         runSummaryButton.disabled = true;
                         deleteConfigButton.disabled = true;
                     }
-                });
 
-                document.getElementById('config-form').addEventListener('submit', (event) => {
-                    event.preventDefault();
-                    vscode.postMessage({
-                        command: 'saveConfig',
-                        name: configNameInput.value,
-                        directoryPath: directoryPathInput.value,
-                        allowedDirectories: allowedDirectoriesInput.value,
-                        excludedDirectories: excludedDirectoriesInput.value,
-                        extensions: Array.from(selectedExtensions)
+                    // Inicializar la interfaz al cargar
+                    initializeInterface();
+
+                    vscode.postMessage({ command: 'getConfigs' });
+
+                    function updateExtensionBadges(extensions) {
+                        extensionBadgesDiv.innerHTML = '';
+                        extensions.forEach(ext => {
+                            const badge = document.createElement('div');
+                            badge.className = 'extension-badge' + (selectedExtensions.has(ext) ? ' selected' : '');
+                            badge.textContent = ext;
+                            badge.classList.add('disabled');
+                            extensionBadgesDiv.appendChild(badge);
+                        });
+                        disableBadges();
+                    }
+
+                    function toggleExtension(ext, badge) {
+                        if (!badge.classList.contains('disabled')) {
+                            if (selectedExtensions.has(ext)) {
+                                selectedExtensions.delete(ext);
+                                badge.classList.remove('selected');
+                            } else {
+                                selectedExtensions.add(ext);
+                                badge.classList.add('selected');
+                            }
+                        }
+                    }
+
+                    function disableBadges() {
+                        const badges = extensionBadgesDiv.querySelectorAll('.extension-badge');
+                        badges.forEach(badge => {
+                            badge.classList.add('disabled');
+                            badge.onclick = null;
+                        });
+                    }
+
+                    function enableBadges() {
+                        const badges = extensionBadgesDiv.querySelectorAll('.extension-badge');
+                        badges.forEach(badge => {
+                            badge.classList.remove('disabled');
+                            badge.onclick = () => toggleExtension(badge.textContent, badge);
+                        });
+                    }
+
+                    function findExtensions() {
+                        const directoryPath = directoryPathInput.value;
+                        const allowedDirectories = allowedDirectoriesInput.value;
+                        const excludedDirectories = excludedDirectoriesInput.value;
+                        const excludedFiles = excludedFilesInput.value;
+
+                        if (directoryPath) {
+                            const loaderContainer = document.getElementById('loaderContainer');
+                            const loaderText = document.getElementById('loaderText');
+                            loaderContainer.style.display = 'flex';
+                            loaderText.textContent = 'Cargando extensiones...';
+                            disableBadges();
+                            const startTime = Date.now();
+                            
+                            vscode.postMessage({
+                                command: 'findExtensions',
+                                directoryPath,
+                                allowedDirectories,
+                                excludedDirectories,
+                                excludedFiles
+                            });
+
+                            window.extensionsReceived = () => {
+                                const elapsedTime = Date.now() - startTime;
+                                if (elapsedTime < 1000) {
+                                    setTimeout(() => {
+                                        loaderContainer.style.display = 'none';
+                                        enableBadges();
+                                    }, 1000 - elapsedTime);
+                                } else {
+                                    loaderContainer.style.display = 'none';
+                                    enableBadges();
+                                }
+                            };
+                        }
+                    }
+
+                    window.addEventListener('message', event => {
+                        const message = event.data;
+                        switch (message.command) {
+                            case 'setConfigs':
+                                configurations = message.configurations;
+                                updateConfigSelector();
+                                break;
+                            case 'setExtensions':
+                                updateExtensionBadges(message.extensions);
+                                document.getElementById('loaderText').textContent = 'Actualizando extensiones...';
+                                if (window.extensionsReceived) {
+                                    window.extensionsReceived();
+                                }
+                                break;
+                            case 'configSaved':
+                                configSelector.value = message.configName;
+                                break;
+                        }
                     });
-                });
 
-                runSummaryButton.addEventListener('click', () => {
-                    const selectedConfigName = configSelector.value;
-                    if (selectedConfigName) {
-                        vscode.postMessage({ 
-                            command: 'runSummary',
-                            configName: selectedConfigName
+                    function updateConfigSelector() {
+                        configSelector.innerHTML = '<option value="">Crear nueva configuración</option>';
+                        configurations.forEach(config => {
+                            const option = document.createElement('option');
+                            option.value = config.name;
+                            option.textContent = config.name;
+                            configSelector.appendChild(option);
                         });
-                    } else {
+                    }
+
+                    configSelector.addEventListener('change', (event) => {
+                        const selectedConfig = configurations.find(c => c.name === event.target.value);
+                        if (selectedConfig) {
+                            configNameInput.value = selectedConfig.name;
+                            directoryPathInput.value = selectedConfig.directoryPath;
+                            allowedDirectoriesInput.value = selectedConfig.allowedDirectories;
+                            excludedDirectoriesInput.value = selectedConfig.excludedDirectories || defaultExcludedDirectories;
+                            excludedFilesInput.value = selectedConfig.excludedFiles || defaultExcludedFiles;
+                            selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
+                            updateExtensionBadges(selectedConfig.extensions);
+                            runSummaryButton.disabled = false;
+                            deleteConfigButton.disabled = false;
+                            findExtensions();
+                        } else {
+                            initializeInterface();
+                        }
+                    });
+                    [directoryPathInput, allowedDirectoriesInput, excludedDirectoriesInput, excludedFilesInput].forEach(input => {
+                        input.addEventListener('change', findExtensions);
+                    });
+                    document.getElementById('config-form').addEventListener('submit', (event) => {
+                        event.preventDefault();
                         vscode.postMessage({
-                            command: 'showError',
-                            message: 'Por favor, selecciona una configuración antes de generar el resumen.'
+                            command: 'saveConfig',
+                            name: configNameInput.value,
+                            directoryPath: directoryPathInput.value,
+                            allowedDirectories: allowedDirectoriesInput.value,
+                            excludedDirectories: excludedDirectoriesInput.value,
+                            excludedFiles: excludedFilesInput.value,
+                            extensions: Array.from(selectedExtensions)
                         });
-                    }
-                });
+                    });
 
-                deleteConfigButton.addEventListener('click', () => {
-                    if (configSelector.value) {
-                        vscode.postMessage({ 
-                            command: 'deleteConfig',
-                            configName: configSelector.value
-                        });
-                    }
-                });
-            </script>
-        </body>
-        </html>`;
+                    runSummaryButton.addEventListener('click', () => {
+                        const selectedConfigName = configSelector.value;
+                        if (selectedConfigName) {
+                            vscode.postMessage({ 
+                                command: 'runSummary',
+                                configName: selectedConfigName
+                            });
+                        } else {
+                            vscode.window.showErrorMessage('Por favor, selecciona una configuración antes de generar el resumen.');
+                        }
+                    });
+
+                    deleteConfigButton.addEventListener('click', () => {
+                        if (configSelector.value) {
+                            vscode.postMessage({ 
+                                command: 'deleteConfig',
+                                configName: configSelector.value
+                            });
+                        }
+                    });
+                    vscode.postMessage({ command: 'getConfigs' });
+                </script>
+            </body>
+            </html>
+        `;
     }
 }
 exports.SummaryViewProvider = SummaryViewProvider;
