@@ -10,6 +10,7 @@ interface ConfigurationItem {
     excludedDirectories: string[];
     excludedFiles: string[];
     extensions: string[];
+    showAllExtensions: boolean; // Nueva propiedad para indicar si se deben mostrar todas las combinaciones de extensiones
 }
 
 export class SummaryViewProvider implements vscode.WebviewViewProvider {
@@ -61,7 +62,8 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 message.directoryPath,
                                 message.allowedDirectories.split(',').map((dir: string) => dir.trim()),
                                 message.excludedDirectories.split(',').map((dir: string) => dir.trim()),
-                                message.excludedFiles.split(',').map((file: string) => file.trim())
+                                message.excludedFiles.split(',').map((file: string) => file.trim()),
+                                message.showAllExtensions // Enviar preferencia para mostrar todas las combinaciones de extensiones
                             );
                             webviewView.webview.postMessage({
                                 command: 'setExtensions',
@@ -82,7 +84,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
         this.sendConfigsToWebview(webviewView.webview);
     }
 
-    private async findExtensions(directoryPath: string, allowedDirectories: string[], excludedDirectories: string[], excludedFiles: string[]): Promise<Set<string>> {
+    private async findExtensions(directoryPath: string, allowedDirectories: string[], excludedDirectories: string[], excludedFiles: string[], showAllExtensions: boolean): Promise<Set<string>> {
         const extensions = new Set<string>();
 
         const isExcluded = (relativePath: string) => {
@@ -104,8 +106,18 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 if (fs.statSync(fullPath).isDirectory()) {
                     processDirectory(fullPath, basePath); // Recursively process subdirectories
                 } else {
-                    const ext = path.extname(file).toLowerCase();
-                    if (ext) extensions.add(ext);
+                    const parts = file.split('.');
+                    if (parts.length > 1) {
+                        if (showAllExtensions) {
+                            for (let i = 1; i < parts.length; i++) {
+                                const ext = '.' + parts.slice(i).join('.').toLowerCase();
+                                extensions.add(ext);
+                            }
+                        } else {
+                            const ext = '.' + parts[parts.length - 1].toLowerCase();
+                            extensions.add(ext);
+                        }
+                    }
                 }
             }
         };
@@ -134,7 +146,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
-        const { directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions } = selectedConfig;
+        const { directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions, showAllExtensions } = selectedConfig;
 
         if (!directoryPath || extensions.length === 0) {
             vscode.window.showErrorMessage('Por favor, configure todos los ajustes antes de generar el resumen.');
@@ -179,9 +191,18 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
 
                 if (fs.statSync(fullPath).isDirectory()) {
                     processDirectory(fullPath, basePath); // Recursively process subdirectories
-                } else if (extensions.includes(path.extname(file).toLowerCase())) {
-                    const content = fs.readFileSync(fullPath, 'utf8');
-                    summaryContent += `\n/* Inicio ${relativePath} */\n${content}\n/* Fin ${relativePath} */\n`;
+                } else {
+                    const parts = file.split('.');
+                    if (parts.length > 1) {
+                        for (let i = 1; i < parts.length; i++) {
+                            const ext = '.' + parts.slice(i).join('.').toLowerCase();
+                            if (extensions.includes(ext)) {
+                                const content = fs.readFileSync(fullPath, 'utf8');
+                                summaryContent += `\n/* Inicio ${relativePath} */\n${content}\n/* Fin ${relativePath} */\n`;
+                                break; // Stop after the first matching extension
+                            }
+                        }
+                    }
                 }
             }
         };
@@ -209,17 +230,18 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
     private async sendConfigsToWebview(webview: vscode.Webview) {
         const config = vscode.workspace.getConfiguration('summary1');
         const configurations = config.get('configurations') as ConfigurationItem[];
-
+    
         webview.postMessage({
             command: 'setConfigs',
             configurations: configurations.map(c => ({
                 ...c,
                 allowedDirectories: c.allowedDirectories.join(', '),
                 excludedDirectories: c.excludedDirectories.join(', '),
-                excludedFiles: c.excludedFiles.join(', ')
+                excludedFiles: c.excludedFiles.join(', '),
+                showAllExtensions: c.showAllExtensions !== undefined ? c.showAllExtensions : false // Establecer un valor por defecto si no está presente
             }))
         });
-    }
+    }   
 
     private async saveConfiguration(message: any): Promise<string> {
         try {
@@ -232,7 +254,8 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 allowedDirectories: message.allowedDirectories.split(',').map((dir: string) => dir.trim()),
                 excludedDirectories: message.excludedDirectories.split(',').map((dir: string) => dir.trim()),
                 excludedFiles: message.excludedFiles.split(',').map((file: string) => file.trim()),
-                extensions: message.extensions
+                extensions: message.extensions,
+                showAllExtensions: message.showAllExtensions // Guardar la preferencia de mostrar todas las extensiones
             };
 
             const existingIndex = configurations.findIndex(c => c.name === newConfig.name);
@@ -282,6 +305,8 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         --accent: #6a6a6a;
                         --error: #b85c5c;
                         --success: #4caf50;
+                        --toggle-off: #888;
+                        --toggle-on: #4caf50;
                     }
                     body { 
                         padding: 10px; 
@@ -308,7 +333,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         display: block; 
                         margin-top: 8px;
                         font-weight: bold;
-                        color: var(--highlight);
+                        color: var(--foreground);
                     }
                     input, select { 
                         width: 100%; 
@@ -334,7 +359,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         margin-top: 8px;
                     }
                     .extension-badge {
-                        background-color: var(--badge-default); /* Color gris por defecto */
+                        background-color: var(--badge-default); 
                         color: var(--foreground);
                         padding: 5px 10px;
                         border-radius: 12px;
@@ -346,7 +371,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         transition: background-color 0.2s ease;
                     }
                     .extension-badge.selected {
-                        background-color: var(--highlight); /* Cambia a azul cuando se selecciona */
+                        background-color: var(--highlight); 
                     }
                     .extension-badge.disabled {
                         opacity: 0.5;
@@ -395,6 +420,53 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         0% { transform: rotate(0deg); }
                         100% { transform: rotate(360deg); }
                     }
+                    /* Estilo para el toggle switch */
+                    .toggle-container {
+                        display: flex;
+                        align-items: center;
+                        margin-top: 8px;
+                        margin-bottom: 12px;
+                    }
+                    .toggle-switch {
+                        position: relative;
+                        display: inline-block;
+                        width: 40px;
+                        height: 20px;
+                        margin-right: 10px;
+                    }
+                    .toggle-switch input {
+                        opacity: 0;
+                        width: 0;
+                        height: 0;
+                    }
+                    .slider {
+                        position: absolute;
+                        cursor: pointer;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: var(--toggle-off);
+                        transition: .4s;
+                        border-radius: 34px;
+                    }
+                    .slider:before {
+                        position: absolute;
+                        content: "";
+                        height: 14px;
+                        width: 14px;
+                        left: 3px;
+                        bottom: 3px;
+                        background-color: white;
+                        transition: .4s;
+                        border-radius: 50%;
+                    }
+                    input:checked + .slider {
+                        background-color: var(--toggle-on);
+                    }
+                    input:checked + .slider:before {
+                        transform: translateX(20px);
+                    }
                 </style>
             </head>
             <body>
@@ -422,6 +494,14 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         <label for="excludedFiles">Archivos Excluidos:</label>
                         <div class="example">Ejemplo: package-lock.json, .gitignore</div>
                         <input type="text" id="excludedFiles" placeholder="Ingrese los archivos excluidos (separados por comas)">
+
+                        <div class="toggle-container">
+                            <label for="showAllExtensionsCheckbox">Mostrar todas las combinaciones de extensiones:</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showAllExtensionsCheckbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                         
                         <label for="extensions">Extensiones de Archivo:</label>
                         <div class="loader-container" id="loaderContainer" style="display: none;">
@@ -445,6 +525,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     const allowedDirectoriesInput = document.getElementById('allowedDirectories');
                     const excludedDirectoriesInput = document.getElementById('excludedDirectories');
                     const excludedFilesInput = document.getElementById('excludedFiles');
+                    const showAllExtensionsCheckbox = document.getElementById('showAllExtensionsCheckbox');
                     const extensionBadgesDiv = document.getElementById('extensionBadges');
                     const runSummaryButton = document.getElementById('runSummary');
                     const deleteConfigButton = document.getElementById('deleteConfig');
@@ -526,6 +607,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         extensionBadgesDiv.innerHTML = '';
                         runSummaryButton.disabled = true;
                         deleteConfigButton.disabled = true;
+                        showAllExtensionsCheckbox.checked = false;
                     }
 
                     // Inicializar la interfaz al cargar
@@ -578,6 +660,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         const allowedDirectories = allowedDirectoriesInput.value;
                         const excludedDirectories = excludedDirectoriesInput.value;
                         const excludedFiles = excludedFilesInput.value;
+                        const showAllExtensions = showAllExtensionsCheckbox.checked;
 
                         if (directoryPath) {
                             const loaderContainer = document.getElementById('loaderContainer');
@@ -592,7 +675,8 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 directoryPath,
                                 allowedDirectories,
                                 excludedDirectories,
-                                excludedFiles
+                                excludedFiles,
+                                showAllExtensions
                             });
 
                             window.extensionsReceived = () => {
@@ -649,6 +733,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             excludedDirectoriesInput.value = selectedConfig.excludedDirectories || defaultExcludedDirectories;
                             excludedFilesInput.value = selectedConfig.excludedFiles || defaultExcludedFiles;
                             selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
+                            showAllExtensionsCheckbox.checked = selectedConfig.showAllExtensions !== undefined ? selectedConfig.showAllExtensions : false; // Manejar el valor por defecto
                             updateExtensionBadges(selectedConfig.extensions);
                             runSummaryButton.disabled = false;
                             deleteConfigButton.disabled = false;
@@ -657,9 +742,12 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             initializeInterface();
                         }
                     });
-                    [directoryPathInput, allowedDirectoriesInput, excludedDirectoriesInput, excludedFilesInput].forEach(input => {
+
+
+                    [directoryPathInput, allowedDirectoriesInput, excludedDirectoriesInput, excludedFilesInput, showAllExtensionsCheckbox].forEach(input => {
                         input.addEventListener('change', findExtensions);
                     });
+
                     document.getElementById('config-form').addEventListener('submit', (event) => {
                         event.preventDefault();
                         vscode.postMessage({
@@ -669,7 +757,8 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             allowedDirectories: allowedDirectoriesInput.value,
                             excludedDirectories: excludedDirectoriesInput.value,
                             excludedFiles: excludedFilesInput.value,
-                            extensions: Array.from(selectedExtensions)
+                            extensions: Array.from(selectedExtensions),
+                            showAllExtensions: showAllExtensionsCheckbox.checked
                         });
                     });
 
@@ -697,6 +786,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 </script>
             </body>
             </html>
+
         `;
     }
 }

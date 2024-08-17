@@ -74,7 +74,8 @@ class SummaryViewProvider {
                     break;
                 case 'findExtensions':
                     try {
-                        const extensions = await this.findExtensions(message.directoryPath, message.allowedDirectories.split(',').map((dir) => dir.trim()), message.excludedDirectories.split(',').map((dir) => dir.trim()), message.excludedFiles.split(',').map((file) => file.trim()));
+                        const extensions = await this.findExtensions(message.directoryPath, message.allowedDirectories.split(',').map((dir) => dir.trim()), message.excludedDirectories.split(',').map((dir) => dir.trim()), message.excludedFiles.split(',').map((file) => file.trim()), message.showAllExtensions // Enviar preferencia para mostrar todas las combinaciones de extensiones
+                        );
                         webviewView.webview.postMessage({
                             command: 'setExtensions',
                             extensions: Array.from(extensions)
@@ -92,7 +93,7 @@ class SummaryViewProvider {
         });
         this.sendConfigsToWebview(webviewView.webview);
     }
-    async findExtensions(directoryPath, allowedDirectories, excludedDirectories, excludedFiles) {
+    async findExtensions(directoryPath, allowedDirectories, excludedDirectories, excludedFiles, showAllExtensions) {
         const extensions = new Set();
         const isExcluded = (relativePath) => {
             const normalizedPath = this.normalizePath(relativePath);
@@ -111,9 +112,19 @@ class SummaryViewProvider {
                     processDirectory(fullPath, basePath); // Recursively process subdirectories
                 }
                 else {
-                    const ext = path.extname(file).toLowerCase();
-                    if (ext)
-                        extensions.add(ext);
+                    const parts = file.split('.');
+                    if (parts.length > 1) {
+                        if (showAllExtensions) {
+                            for (let i = 1; i < parts.length; i++) {
+                                const ext = '.' + parts.slice(i).join('.').toLowerCase();
+                                extensions.add(ext);
+                            }
+                        }
+                        else {
+                            const ext = '.' + parts[parts.length - 1].toLowerCase();
+                            extensions.add(ext);
+                        }
+                    }
                 }
             }
         };
@@ -138,7 +149,7 @@ class SummaryViewProvider {
             vscode.window.showErrorMessage('Configuración seleccionada no encontrada.');
             return;
         }
-        const { directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions } = selectedConfig;
+        const { directoryPath, allowedDirectories, excludedDirectories, excludedFiles, extensions, showAllExtensions } = selectedConfig;
         if (!directoryPath || extensions.length === 0) {
             vscode.window.showErrorMessage('Por favor, configure todos los ajustes antes de generar el resumen.');
             return;
@@ -175,9 +186,18 @@ class SummaryViewProvider {
                 if (fs.statSync(fullPath).isDirectory()) {
                     processDirectory(fullPath, basePath); // Recursively process subdirectories
                 }
-                else if (extensions.includes(path.extname(file).toLowerCase())) {
-                    const content = fs.readFileSync(fullPath, 'utf8');
-                    summaryContent += `\n/* Inicio ${relativePath} */\n${content}\n/* Fin ${relativePath} */\n`;
+                else {
+                    const parts = file.split('.');
+                    if (parts.length > 1) {
+                        for (let i = 1; i < parts.length; i++) {
+                            const ext = '.' + parts.slice(i).join('.').toLowerCase();
+                            if (extensions.includes(ext)) {
+                                const content = fs.readFileSync(fullPath, 'utf8');
+                                summaryContent += `\n/* Inicio ${relativePath} */\n${content}\n/* Fin ${relativePath} */\n`;
+                                break; // Stop after the first matching extension
+                            }
+                        }
+                    }
                 }
             }
         };
@@ -208,7 +228,8 @@ class SummaryViewProvider {
                 ...c,
                 allowedDirectories: c.allowedDirectories.join(', '),
                 excludedDirectories: c.excludedDirectories.join(', '),
-                excludedFiles: c.excludedFiles.join(', ')
+                excludedFiles: c.excludedFiles.join(', '),
+                showAllExtensions: c.showAllExtensions !== undefined ? c.showAllExtensions : false // Establecer un valor por defecto si no está presente
             }))
         });
     }
@@ -222,7 +243,8 @@ class SummaryViewProvider {
                 allowedDirectories: message.allowedDirectories.split(',').map((dir) => dir.trim()),
                 excludedDirectories: message.excludedDirectories.split(',').map((dir) => dir.trim()),
                 excludedFiles: message.excludedFiles.split(',').map((file) => file.trim()),
-                extensions: message.extensions
+                extensions: message.extensions,
+                showAllExtensions: message.showAllExtensions // Guardar la preferencia de mostrar todas las extensiones
             };
             const existingIndex = configurations.findIndex(c => c.name === newConfig.name);
             if (existingIndex !== -1) {
@@ -271,6 +293,8 @@ class SummaryViewProvider {
                         --accent: #6a6a6a;
                         --error: #b85c5c;
                         --success: #4caf50;
+                        --toggle-off: #888;
+                        --toggle-on: #4caf50;
                     }
                     body { 
                         padding: 10px; 
@@ -297,7 +321,7 @@ class SummaryViewProvider {
                         display: block; 
                         margin-top: 8px;
                         font-weight: bold;
-                        color: var(--highlight);
+                        color: var(--foreground);
                     }
                     input, select { 
                         width: 100%; 
@@ -323,7 +347,7 @@ class SummaryViewProvider {
                         margin-top: 8px;
                     }
                     .extension-badge {
-                        background-color: var(--badge-default); /* Color gris por defecto */
+                        background-color: var(--badge-default); 
                         color: var(--foreground);
                         padding: 5px 10px;
                         border-radius: 12px;
@@ -335,7 +359,7 @@ class SummaryViewProvider {
                         transition: background-color 0.2s ease;
                     }
                     .extension-badge.selected {
-                        background-color: var(--highlight); /* Cambia a azul cuando se selecciona */
+                        background-color: var(--highlight); 
                     }
                     .extension-badge.disabled {
                         opacity: 0.5;
@@ -384,6 +408,53 @@ class SummaryViewProvider {
                         0% { transform: rotate(0deg); }
                         100% { transform: rotate(360deg); }
                     }
+                    /* Estilo para el toggle switch */
+                    .toggle-container {
+                        display: flex;
+                        align-items: center;
+                        margin-top: 8px;
+                        margin-bottom: 12px;
+                    }
+                    .toggle-switch {
+                        position: relative;
+                        display: inline-block;
+                        width: 40px;
+                        height: 20px;
+                        margin-right: 10px;
+                    }
+                    .toggle-switch input {
+                        opacity: 0;
+                        width: 0;
+                        height: 0;
+                    }
+                    .slider {
+                        position: absolute;
+                        cursor: pointer;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: var(--toggle-off);
+                        transition: .4s;
+                        border-radius: 34px;
+                    }
+                    .slider:before {
+                        position: absolute;
+                        content: "";
+                        height: 14px;
+                        width: 14px;
+                        left: 3px;
+                        bottom: 3px;
+                        background-color: white;
+                        transition: .4s;
+                        border-radius: 50%;
+                    }
+                    input:checked + .slider {
+                        background-color: var(--toggle-on);
+                    }
+                    input:checked + .slider:before {
+                        transform: translateX(20px);
+                    }
                 </style>
             </head>
             <body>
@@ -411,6 +482,14 @@ class SummaryViewProvider {
                         <label for="excludedFiles">Archivos Excluidos:</label>
                         <div class="example">Ejemplo: package-lock.json, .gitignore</div>
                         <input type="text" id="excludedFiles" placeholder="Ingrese los archivos excluidos (separados por comas)">
+
+                        <div class="toggle-container">
+                            <label for="showAllExtensionsCheckbox">Mostrar todas las combinaciones de extensiones:</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showAllExtensionsCheckbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                         
                         <label for="extensions">Extensiones de Archivo:</label>
                         <div class="loader-container" id="loaderContainer" style="display: none;">
@@ -434,6 +513,7 @@ class SummaryViewProvider {
                     const allowedDirectoriesInput = document.getElementById('allowedDirectories');
                     const excludedDirectoriesInput = document.getElementById('excludedDirectories');
                     const excludedFilesInput = document.getElementById('excludedFiles');
+                    const showAllExtensionsCheckbox = document.getElementById('showAllExtensionsCheckbox');
                     const extensionBadgesDiv = document.getElementById('extensionBadges');
                     const runSummaryButton = document.getElementById('runSummary');
                     const deleteConfigButton = document.getElementById('deleteConfig');
@@ -515,6 +595,7 @@ class SummaryViewProvider {
                         extensionBadgesDiv.innerHTML = '';
                         runSummaryButton.disabled = true;
                         deleteConfigButton.disabled = true;
+                        showAllExtensionsCheckbox.checked = false;
                     }
 
                     // Inicializar la interfaz al cargar
@@ -567,6 +648,7 @@ class SummaryViewProvider {
                         const allowedDirectories = allowedDirectoriesInput.value;
                         const excludedDirectories = excludedDirectoriesInput.value;
                         const excludedFiles = excludedFilesInput.value;
+                        const showAllExtensions = showAllExtensionsCheckbox.checked;
 
                         if (directoryPath) {
                             const loaderContainer = document.getElementById('loaderContainer');
@@ -581,7 +663,8 @@ class SummaryViewProvider {
                                 directoryPath,
                                 allowedDirectories,
                                 excludedDirectories,
-                                excludedFiles
+                                excludedFiles,
+                                showAllExtensions
                             });
 
                             window.extensionsReceived = () => {
@@ -638,6 +721,7 @@ class SummaryViewProvider {
                             excludedDirectoriesInput.value = selectedConfig.excludedDirectories || defaultExcludedDirectories;
                             excludedFilesInput.value = selectedConfig.excludedFiles || defaultExcludedFiles;
                             selectedExtensions = new Set(selectedConfig.extensions.map(ext => ext.toLowerCase()));
+                            showAllExtensionsCheckbox.checked = selectedConfig.showAllExtensions !== undefined ? selectedConfig.showAllExtensions : false; // Manejar el valor por defecto
                             updateExtensionBadges(selectedConfig.extensions);
                             runSummaryButton.disabled = false;
                             deleteConfigButton.disabled = false;
@@ -646,9 +730,12 @@ class SummaryViewProvider {
                             initializeInterface();
                         }
                     });
-                    [directoryPathInput, allowedDirectoriesInput, excludedDirectoriesInput, excludedFilesInput].forEach(input => {
+
+
+                    [directoryPathInput, allowedDirectoriesInput, excludedDirectoriesInput, excludedFilesInput, showAllExtensionsCheckbox].forEach(input => {
                         input.addEventListener('change', findExtensions);
                     });
+
                     document.getElementById('config-form').addEventListener('submit', (event) => {
                         event.preventDefault();
                         vscode.postMessage({
@@ -658,7 +745,8 @@ class SummaryViewProvider {
                             allowedDirectories: allowedDirectoriesInput.value,
                             excludedDirectories: excludedDirectoriesInput.value,
                             excludedFiles: excludedFilesInput.value,
-                            extensions: Array.from(selectedExtensions)
+                            extensions: Array.from(selectedExtensions),
+                            showAllExtensions: showAllExtensionsCheckbox.checked
                         });
                     });
 
@@ -686,6 +774,7 @@ class SummaryViewProvider {
                 </script>
             </body>
             </html>
+
         `;
     }
 }

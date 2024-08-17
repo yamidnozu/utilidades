@@ -4,6 +4,21 @@ Todos los cambios notables en la extensión "eDev Summary" serán documentados e
 
 El formato está basado en [Keep a Changelog](http://keepachangelog.com/), y este proyecto adhiere a [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 2024-08-17
+
+### Añadido
+- Opción para mostrar todas las combinaciones de extensiones de archivo mediante un control toggle switch en la interfaz gráfica.
+- Persistencia de la preferencia del toggle switch en las configuraciones guardadas.
+- Interfaz visual mejorada, con un diseño más alineado y estéticamente agradable.
+- Implementación de un toggle switch en lugar de un checkbox para seleccionar si se muestran todas las combinaciones de extensiones.
+  
+### Cambiado
+- Alineación y estilo visual de los controles en la interfaz gráfica, mejorando la usabilidad.
+- Adaptación para cargar configuraciones anteriores que no incluyan el nuevo campo `showAllExtensions`, asegurando compatibilidad.
+
+### Arreglado
+- Resuelto el problema donde las configuraciones existentes no se cargaban correctamente debido a la ausencia del campo `showAllExtensions`.
+
 ## [1.3.0] - 2024-08-17
 
 ### Añadido
