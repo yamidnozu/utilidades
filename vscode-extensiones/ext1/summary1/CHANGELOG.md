@@ -1,12 +1,47 @@
 # Change Log
 
-All notable changes to the "summary1" extension will be documented in this file.
+Todos los cambios notables en la extensión "eDev Summary" serán documentados en este archivo.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+El formato está basado en [Keep a Changelog](http://keepachangelog.com/), y este proyecto adhiere a [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [1.3.0] - 2024-08-17
 
-- Initial release
-- Ajustes en la forma como toma y genera el resumen.
-- Se agrega directorios y archivos excluidos por defecto
-- Se ajusta y soluciona problemas de actualizaciones de extensiones y guardado
+### Añadido
+- Interfaz gráfica de usuario (GUI) integrada en VSCode para una configuración más fácil.
+- Análisis dinámico de extensiones de archivo presentes en el proyecto.
+- Capacidad para guardar y gestionar múltiples configuraciones.
+- Visualización de extensiones de archivo como badges seleccionables.
+- Funcionalidad para excluir directorios y archivos específicos.
+- Opción para seleccionar carpetas específicas para el análisis.
+
+### Cambiado
+- Mejorada la lógica de generación de resúmenes para mayor eficiencia.
+- Actualizado el formato del archivo RESUMEN.txt para mejor legibilidad.
+
+### Arreglado
+- Solucionados problemas con la actualización de extensiones y el guardado de configuraciones.
+
+## [1.2.0] - 2024-08-01
+
+### Añadido
+- Lista predeterminada de directorios y archivos comúnmente excluidos.
+- Soporte para patrones glob en la exclusión de archivos.
+
+### Mejorado
+- Optimizado el rendimiento para proyectos de gran tamaño.
+
+## [1.1.0] - 2024-07-15
+
+### Añadido
+- Funcionalidad para excluir directorios y archivos específicos.
+- Opción para seleccionar extensiones de archivo a incluir en el resumen.
+
+### Cambiado
+- Ajustada la forma en que se toma y genera el resumen para mejor precisión.
+
+## [1.0.0] - 2024-07-01
+
+### Añadido
+- Lanzamiento inicial de eDev Summary.
+- Funcionalidad básica para generar resúmenes de proyectos.
+- Soporte para configurar la ruta del proyecto.
