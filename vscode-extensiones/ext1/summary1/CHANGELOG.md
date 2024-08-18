@@ -3,6 +3,10 @@
 Todos los cambios notables en la extensión "eDev Summary" serán documentados en este archivo.
 
 El formato está basado en [Keep a Changelog](http://keepachangelog.com/), y este proyecto adhiere a [Semantic Versioning](http://semver.org/).
+## [3.0.0] - 2024-08-18
+
+### Cambiado
+- Se modifica para uso con webpack
 
 ## [2.0.0] - 2024-08-17
 
