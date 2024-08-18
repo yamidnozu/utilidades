@@ -1,0 +1,17 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { <%= classify(name) %>Gateway } from '../../domain/models/<%= dasherize(name) %>.gateway';
+import { <%= classify(name) %>Model } from '../../domain/models/<%= dasherize(name) %>.model';
+
+@Injectable()
+export class <%= classify(name) %>Service extends <%= classify(name) %>Gateway {
+  constructor(private http: HttpClient) {
+    super();
+  }
+
+  performOperation(data: <%= classify(name) %>Model): Observable<any> {
+    // Aquí defines la lógica para interactuar con la API o fuente de datos externa
+    return this.http.post('/api/performOperation', data);
+  }
+}

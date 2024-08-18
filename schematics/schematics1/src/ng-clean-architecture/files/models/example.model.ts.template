@@ -1,0 +1,6 @@
+export interface <%= classify(name) %>Model {
+  // Define los atributos de tu modelo aquí
+  id: number;
+  name: string;
+  // Agrega más propiedades según las necesidades del modelo
+}

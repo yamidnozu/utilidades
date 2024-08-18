@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "ng-clean-architecture",
+  "title": "Clean Architecture Schematic",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nombre de la entidad o funcionalidad",
+      "x-prompt": "¿Cuál es el nombre de la entidad o funcionalidad?"
+    },
+    "path": {
+      "type": "string",
+      "description": "Ruta donde se generarán los archivos",
+      "default": "src/app",
+      "x-prompt": "¿Dónde quieres generar los archivos?"
+    }
+  },
+  "required": ["name", "path"]
+}

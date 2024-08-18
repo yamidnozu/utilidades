@@ -1,0 +1,11 @@
+import { Observable } from 'rxjs';
+
+export abstract class <%= classify(name) %>Gateway {
+  /**
+   * Método para realizar una operación sobre <%= name %>
+   *
+   * @param {<%= classify(name) %>Model} data - Los datos del <%= name %>
+   * @returns {Observable<any>}
+   */
+  abstract performOperation(data: <%= classify(name) %>Model): Observable<any>;
+}

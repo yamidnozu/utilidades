@@ -1,0 +1,19 @@
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { <%= classify(name) %>Gateway } from '../models/<%= dasherize(name) %>.gateway';
+import { <%= classify(name) %>Model } from '../models/<%= dasherize(name) %>.model';
+
+@Injectable()
+export class <%= classify(name) %>UseCase {
+  constructor(private _gateway: <%= classify(name) %>Gateway) {}
+
+  /**
+   * Ejecuta el caso de uso.
+   *
+   * @param {<%= classify(name) %>Model} data - Datos para el caso de uso
+   * @returns {Observable<any>}
+   */
+  invoke(data: <%= classify(name) %>Model): Observable<any> {
+    return this._gateway.performOperation(data);
+  }
+}

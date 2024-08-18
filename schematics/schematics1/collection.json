@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "ng-clean-architecture": {
+      "description": "Generate clean architecture files",
+      "factory": "./src/ng-clean-architecture/index#ngCleanArchitecture",
+      "schema": "./src/ng-clean-architecture/schema.json"
+    }
+  }
+}

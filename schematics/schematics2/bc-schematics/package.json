@@ -1,18 +1,15 @@
 {
-  "name": "ng-clean-architecture",
+  "name": "bc-schematics",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build && cp package.json dist/ng-clean-architecture/",
+    "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "private": true,
   "dependencies": {
-    "@angular-devkit/core": "^18.2.0",
-    "@angular-devkit/schematics": "^18.2.0",
-    "@angular-devkit/schematics-cli": "^18.2.0",
     "@angular/animations": "^18.2.0",
     "@angular/common": "^18.2.0",
     "@angular/compiler": "^18.2.0",
@@ -36,7 +33,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "ng-packagr": "^18.2.0",
     "typescript": "~5.5.2"
-  },
-  "schematics": "./collection.json"
+  }
 }

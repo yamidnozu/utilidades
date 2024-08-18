@@ -1,0 +1,12 @@
+import { NgModule } from '@angular/core';
+import { <%= classify(name) %>UseCase } from './domain/usecases/<%= dasherize(name) %>.usecase';
+import { <%= classify(name) %>Service } from './infraestructure/driven-adapter/<%= dasherize(name) %>.service';
+import { <%= classify(name) %>Gateway } from './domain/models/<%= dasherize(name) %>.gateway';
+
+@NgModule({
+  providers: [
+    <%= classify(name) %>UseCase,
+    { provide: <%= classify(name) %>Gateway, useClass: <%= classify(name) %>Service },
+  ],
+})
+export class <%= classify(name) %>Module {}

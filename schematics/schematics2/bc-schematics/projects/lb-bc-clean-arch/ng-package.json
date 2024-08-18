@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/lb-bc-clean-arch",
+  "lib": {
+    "entryFile": "src/public-api.ts"
+  }
+}

@@ -1,0 +1,34 @@
+import { TestBed } from '@angular/core/testing';
+import { <%= classify(name) %>UseCase } from './<%= dasherize(name) %>.usecase';
+import { <%= classify(name) %>Gateway } from '../models/<%= dasherize(name) %>.gateway';
+import { of } from 'rxjs';
+
+describe('<%= classify(name) %>UseCase', () => {
+  let useCase: <%= classify(name) %>UseCase;
+  let gateway: jasmine.SpyObj<<%= classify(name) %>Gateway>;
+
+  beforeEach(() => {
+    const gatewaySpy = jasmine.createSpyObj('<%= classify(name) %>Gateway', ['performOperation']);
+
+    TestBed.configureTestingModule({
+      providers: [
+        <%= classify(name) %>UseCase,
+        { provide: <%= classify(name) %>Gateway, useValue: gatewaySpy },
+      ],
+    });
+
+    useCase = TestBed.inject(<%= classify(name) %>UseCase);
+    gateway = TestBed.inject(<%= classify(name) %>Gateway) as jasmine.SpyObj<<%= classify(name) %>Gateway>;
+  });
+
+  it('should execute the use case', (done) => {
+    const mockData = { id: 1, name: 'Test' } as <%= classify(name) %>Model;
+    gateway.performOperation.and.returnValue(of(true));
+
+    useCase.invoke(mockData).subscribe((result) => {
+      expect(result).toBe(true);
+      expect(gateway.performOperation).toHaveBeenCalledWith(mockData);
+      done();
+    });
+  });
+});
