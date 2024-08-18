@@ -2,7 +2,7 @@
   "name": "edev-summary",
   "displayName": "eDev Summary",
   "description": "Genera resúmenes de archivos de código fuente en un solo archivo RESUMEN.txt, útil como insumos para dar contexto a la IA de tu proyecto.",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/yamidnozu/utilidades/tree/main/vscode-extensiones/ext1/summary1"
@@ -101,15 +101,15 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.92.0",
     "@types/glob": "^7.1.3",
     "@types/mocha": "^8.2.2",
     "@types/node": "14.x",
-    "eslint": "^7.27.0",
+    "@types/vscode": "^1.92.0",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
     "glob": "^7.1.7",
-    "mocha": "^8.4.0",
+    "mocha": "^10.7.3",
     "typescript": "^4.3.2",
     "vscode-test": "^1.5.2"
   }
