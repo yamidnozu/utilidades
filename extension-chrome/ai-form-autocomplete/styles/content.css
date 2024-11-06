@@ -1,0 +1,9 @@
+.incomplete-field {
+  border: 2px solid red !important;
+}
+
+.form-autocomplete-tooltip {
+  position: absolute;
+  color: red;
+  font-size: 12px;
+}

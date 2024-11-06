@@ -35,9 +35,9 @@ async function simularErrores(req, res, next) {
     return res.status(500).json({
       errors: [{
         type: "Error",
-        code: "SIM500",
-        reason: "Error simulado",
-        message: "Se ha simulado un error en este endpoint.",
+        code: "504",
+        reason: "Algo salió mal",
+        message: "No fue posible cargar la información. Intenta de nuevo",
         domain: path
       }]
     });

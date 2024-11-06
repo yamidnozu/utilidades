@@ -208,6 +208,56 @@
       "categoryOptionsCount": 0,
       "categoryAssignedPlan": null,
       "optionsList": []
+    },
+    {
+      "categoryId": 15,
+      "categoryCode": "CAT015",
+      "categoryName": "Factor",
+      "categoryDescription": "casa",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 15,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        }
+      ]
+    },
+    {
+      "categoryId": 16,
+      "categoryCode": "CAT016",
+      "categoryName": "Facccc",
+      "categoryDescription": "tttuura",
+      "categoryOptionsCount": 2,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 16,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        },
+        {
+          "optionId": 17,
+          "optionCode": "TX003",
+          "optionName": "Consulta de Saldo"
+        }
+      ]
+    },
+    {
+      "categoryId": 17,
+      "categoryCode": "CAT017",
+      "categoryName": "Facturat",
+      "categoryDescription": "asd",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 18,
+          "optionCode": "TX021",
+          "optionName": "Pago de Impuestos Departamentales"
+        }
+      ]
     }
   ],
   "configuraciones": {

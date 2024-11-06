@@ -1,0 +1,625 @@
+
+/* Inicio ai-form-autocomplete\background.js */
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === 'AUTO_COMPLETE' && request.formData) {
+        getAICompletion(request.formData)
+            .then(completedData => {
+                sendResponse({ completedData });
+            })
+            .catch(error => {
+                console.error('Error al obtener datos de IA:', error);
+                sendResponse({ error: 'Error al obtener datos de IA.' });
+            });
+        return true; // Indica que la respuesta será asíncrona
+    }
+});
+
+// Función para obtener la clave API almacenada
+function getApiKey() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(['openaiApiKey'], (result) => {
+            resolve(result.openaiApiKey);
+        });
+    });
+}
+
+// Función para comunicarse con la API de OpenAI
+async function getAICompletion(formData) {
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+        throw new Error('La clave de la API no está definida. Por favor, ingrésala en las opciones de la extensión.');
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: 'gpt-3.5-turbo',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'Eres un asistente de IA que ayuda a completar formularios web. Dado el siguiente formulario representado en JSON, completa los valores faltantes de manera inteligente y devuelve únicamente un objeto JSON con los campos completados. No incluyas ninguna explicación adicional.'
+                },
+                {
+                    role: 'user',
+                    content: generatePrompt(formData)
+                }
+            ],
+            max_tokens: 500,
+            temperature: 0.7
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error en la API: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
+    return parseAIResponse(aiResponse);
+}
+
+// Genera el prompt para la IA basado en los datos del formulario
+function generatePrompt(formData) {
+    return `Formulario:
+${JSON.stringify(formData, null, 2)}
+
+Datos completados (en JSON):`;
+}
+
+// Analiza la respuesta de la IA y la convierte en un objeto
+function parseAIResponse(text) {
+    try {
+        const jsonStart = text.indexOf('{');
+        const jsonEnd = text.lastIndexOf('}');
+        const jsonString = text.substring(jsonStart, jsonEnd + 1);
+        return JSON.parse(jsonString);
+    } catch (e) {
+        console.error('Error al parsear la respuesta de la IA:', e);
+        return {};
+    }
+}
+
+/* Fin ai-form-autocomplete\background.js */
+
+/* Inicio ai-form-autocomplete\contentScript.js */
+// Función para detectar todos los formularios en la página, incluidos los embebidos en iframes
+function getAllForms() {
+    let forms = Array.from(document.querySelectorAll('form'));
+    const iframes = Array.from(document.querySelectorAll('iframe'));
+
+    iframes.forEach(iframe => {
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeForms = Array.from(iframeDoc.querySelectorAll('form'));
+            forms = forms.concat(iframeForms);
+        } catch (e) {
+            console.warn('No se pudo acceder al contenido del iframe:', e);
+        }
+    });
+
+    return forms;
+}
+
+// Analiza un formulario y devuelve una estructura con sus campos
+function analyzeForm(form) {
+    const elements = Array.from(form.elements);
+    const fields = elements.map(element => {
+        return {
+            tag: element.tagName.toLowerCase(),
+            type: element.type,
+            name: element.name,
+            id: element.id,
+            placeholder: element.placeholder,
+            required: element.required,
+            options: element.options ? Array.from(element.options).map(opt => opt.value) : null,
+            value: element.value
+        };
+    });
+    return { form, fields };
+}
+
+// Resalta campos incompletos
+function highlightIncompleteFields(fields) {
+    fields.forEach(field => {
+        if (!field.value) {
+            const selector = field.name ? `[name="${field.name}"]` : `#${field.id}`;
+            const element = document.querySelector(selector);
+            if (element) {
+                element.classList.add('incomplete-field');
+            }
+        }
+    });
+}
+
+// Validación de campos según sus atributos
+function validateField(field, value) {
+    let isValid = true;
+    let error = '';
+
+    if (field.required && !value) {
+        isValid = false;
+        error = 'Este campo es obligatorio.';
+    }
+
+    // Validaciones específicas según el tipo de campo
+    // (Agregar aquí validaciones adicionales según sea necesario)
+
+    return { isValid, error };
+}
+
+// Maneja la validación de todos los campos
+function handleValidation(fields, completedData) {
+    const incompleteFields = [];
+
+    fields.forEach(field => {
+        const value = completedData[field.name] || '';
+        const { isValid, error } = validateField(field, value);
+        if (!isValid) {
+            incompleteFields.push({ field, error });
+            notifyUser(field, error);
+        }
+    });
+
+    if (incompleteFields.length > 0) {
+        highlightIncompleteFields(incompleteFields.map(item => item.field));
+    }
+}
+
+// Notifica al usuario sobre errores en los campos
+function notifyUser(field, message) {
+    const element = getElementByField(field);
+    if (element) {
+        element.setCustomValidity(message);
+        element.reportValidity();
+    }
+}
+
+function getElementByField(field) {
+    const selector = field.name ? `[name="${field.name}"]` : `#${field.id}`;
+    return document.querySelector(selector);
+}
+
+// Limpia notificaciones anteriores
+function clearNotifications() {
+    const elements = document.querySelectorAll('.incomplete-field');
+    elements.forEach(element => {
+        element.classList.remove('incomplete-field');
+        element.setCustomValidity('');
+    });
+}
+
+// Autocompleta un formulario con los datos proporcionados por la IA
+function autoCompleteForm(formObj, completedData) {
+    const { form, fields } = formObj;
+
+    clearNotifications();
+
+    fields.forEach(field => {
+        const value = completedData[field.name];
+        if (value !== undefined) {
+            const element = getElementByField(field);
+            if (element) {
+                if (field.tag === 'input' || field.tag === 'textarea') {
+                    element.value = value;
+                    element.dispatchEvent(new Event('input', { bubbles: true }));
+                } else if (field.tag === 'select') {
+                    element.value = value;
+                    element.dispatchEvent(new Event('change', { bubbles: true }));
+                } else if (field.type === 'checkbox' || field.type === 'radio') {
+                    element.checked = value === true || value === 'true';
+                    element.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        }
+    });
+
+    // Validar la información
+    handleValidation(fields, completedData);
+
+    // Detectar CAPTCHAs
+    detectCaptcha(formObj);
+
+    // Manejar errores del formulario
+    handleFormErrors(formObj);
+}
+
+// Función para detectar CAPTCHAs
+function detectCaptcha(formObj) {
+    const { form } = formObj;
+    const captchaSelectors = [
+        '.g-recaptcha',
+        'iframe[src*="recaptcha"]',
+        'div[id*="captcha"]',
+        'input[id*="captcha"]'
+    ];
+    let captchaDetected = false;
+
+    captchaSelectors.forEach(selector => {
+        if (form.querySelector(selector)) {
+            captchaDetected = true;
+        }
+    });
+
+    if (captchaDetected) {
+        alert('CAPTCHA detectado. Por favor, complétalo manualmente.');
+    }
+}
+
+// Maneja errores del formulario
+function handleFormErrors(formObj) {
+    const { form } = formObj;
+    const errorSelectors = ['.error', '.invalid', '.field-error', '.has-error'];
+    let errors = [];
+
+    errorSelectors.forEach(selector => {
+        const errorElements = form.querySelectorAll(selector);
+        errorElements.forEach(errorEl => {
+            errors.push(errorEl.textContent.trim());
+        });
+    });
+
+    if (errors.length > 0) {
+        errors.forEach(errorMsg => {
+            console.warn(`Error en el formulario: ${errorMsg}`);
+        });
+    }
+}
+
+// Función para guardar datos del usuario
+function saveUserData(name, value) {
+    // Guardar en chrome.storage.sync
+    chrome.storage.sync.get(['userData'], (result) => {
+        const userData = result.userData || {};
+        userData[name] = value;
+        chrome.storage.sync.set({ userData }, () => {
+            console.log(`Datos del usuario guardados en chrome.storage.sync: ${name} = ${value}`);
+        });
+    });
+
+    // Guardar en chrome.storage.local
+    chrome.storage.local.get(['userDataLocal'], (result) => {
+        const userDataLocal = result.userDataLocal || {};
+        userDataLocal[name] = value;
+        chrome.storage.local.set({ userDataLocal }, () => {
+            console.log(`Datos del usuario guardados en chrome.storage.local: ${name} = ${value}`);
+        });
+    });
+}
+
+
+// Escucha eventos de entrada para detectar intervención del usuario
+document.addEventListener('input', (event) => {
+    if (event.target.classList.contains('incomplete-field')) {
+        event.target.classList.remove('incomplete-field');
+        const name = event.target.name || event.target.id;
+        const value = event.target.value;
+        if (name) {
+            saveUserData(name, value);
+        }
+    }
+});
+
+// Monitorea cambios dinámicos en el DOM
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+            console.log('Cambios detectados en el DOM.');
+            // Reanalizar formularios si hay cambios
+            // (Implementar lógica adicional si es necesario)
+        }
+    });
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
+
+// Agregar desconexión del observer para evitar fugas de memoria
+window.addEventListener('beforeunload', () => {
+    observer.disconnect();
+});
+
+// Listener para mensajes desde el popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === 'AUTOCOMPLETE_FORMS') {
+        const allForms = getAllForms().map(form => analyzeForm(form));
+
+        // Mostrar una interfaz para que el usuario seleccione los formularios
+        // (Esta parte se maneja desde el popup, por lo que aquí simplemente procesamos los formularios)
+
+        // Recolectar datos del usuario almacenados
+        chrome.storage.sync.get(['userData'], (result) => {
+            const userData = result.userData || {};
+
+            // Solicitar autocompletado a la IA
+            chrome.runtime.sendMessage({ type: 'AUTO_COMPLETE', formData: userData }, (response) => {
+                if (response && response.completedData) {
+                    allForms.forEach(formObj => {
+                        autoCompleteForm(formObj, response.completedData);
+                        handleFormErrors(formObj);
+                    });
+                    sendResponse({ status: true });
+                } else {
+                    sendResponse({ status: false, error: response.error });
+                }
+            });
+        });
+
+        return true; // Respuesta asíncrona
+    } else if (request.type === 'GET_FORMS') {
+        const forms = getAllForms();
+        const formDetails = forms.map((form, index) => {
+            return { index, action: form.action || 'Sin acción', method: form.method || 'GET/POST' };
+        });
+        sendResponse(formDetails);
+    }
+});
+
+/* Fin ai-form-autocomplete\contentScript.js */
+
+/* Inicio ai-form-autocomplete\form.html */
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prueba AI Form Autocomplete</title>
+  </head>
+  <body>
+    <h1>Formulario de Prueba</h1>
+    <form id="testForm">
+      <label for="name">Nombre:</label>
+      <input type="text" id="name" name="name" required /><br /><br />
+
+      <label for="email">Correo Electrónico:</label>
+      <input type="email" id="email" name="email" required /><br /><br />
+
+      <label for="phone">Teléfono:</label>
+      <input type="tel" id="phone" name="phone" required /><br /><br />
+
+      <label for="dob">Fecha de Nacimiento:</label>
+      <input type="date" id="dob" name="dob" /><br /><br />
+
+      <input type="submit" value="Enviar" />
+    </form>
+  </body>
+</html>
+
+/* Fin ai-form-autocomplete\form.html */
+
+/* Inicio ai-form-autocomplete\manifest.json */
+{
+    "manifest_version": 3,
+    "name": "AI Form Autocomplete",
+    "version": "1.0",
+    "description": "Detecta, analiza y autocompleta formularios dinámicos utilizando IA.",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "contentScript.js"
+            ],
+            "css": [
+                "styles/content.css"
+            ]
+        }
+    ],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_icon": {
+            "16": "assets/icon.png",
+            "48": "assets/icon.png",
+            "128": "assets/icon.png"
+        }
+    },
+    "icons": {
+        "16": "assets/icon.png",
+        "48": "assets/icon.png",
+        "128": "assets/icon.png"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "styles/content.css"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}
+
+/* Fin ai-form-autocomplete\manifest.json */
+
+/* Inicio ai-form-autocomplete\popup\popup.css */
+body {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+#popup {
+  text-align: center;
+}
+
+#apiKeySection {
+  margin-bottom: 20px;
+}
+
+#apiKeyInput {
+  width: 80%;
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+#saveApiKeyButton {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#saveApiKeyButton:hover {
+  background-color: #218838;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#formList {
+  text-align: left;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+#formList li {
+  margin-bottom: 5px;
+}
+
+/* Fin ai-form-autocomplete\popup\popup.css */
+
+/* Inicio ai-form-autocomplete\popup\popup.html */
+<!-- Inicio ai-form-autocomplete/popup/popup.html -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Form Autocomplete</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="popup">
+      <h1>AI Form Autocomplete</h1>
+      <div id="apiKeySection">
+        <input
+          type="password"
+          id="apiKeyInput"
+          placeholder="Ingresa tu clave API de OpenAI"
+        />
+        <button id="saveApiKeyButton">Guardar Clave API</button>
+      </div>
+      <h2>Formularios Detectados:</h2>
+      <ul id="formList"></ul>
+      <button id="startAutofill">
+        Autocompletar Formularios Seleccionados
+      </button>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
+
+
+/* Fin ai-form-autocomplete\popup\popup.html */
+
+/* Inicio ai-form-autocomplete\popup\popup.js */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Manejar guardado de la clave API
+    document.getElementById('saveApiKeyButton').addEventListener('click', () => {
+        const apiKey = document.getElementById('apiKeyInput').value;
+        chrome.storage.sync.set({ openaiApiKey: apiKey }, () => {
+            alert('Clave API guardada correctamente.');
+        });
+    });
+
+    // Cargar clave API si está almacenada
+    chrome.storage.sync.get(['openaiApiKey'], (result) => {
+        if (result.openaiApiKey) {
+            document.getElementById('apiKeyInput').value = result.openaiApiKey;
+        }
+    });
+
+    // Obtener la lista de formularios desde el content script
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_FORMS' }, (forms) => {
+            if (forms && forms.length > 0) {
+                const formList = document.getElementById('formList');
+                forms.forEach(form => {
+                    const listItem = document.createElement('li');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = form.index;
+                    checkbox.checked = true;
+                    listItem.appendChild(checkbox);
+                    const label = document.createElement('label');
+                    label.textContent = `Formulario ${form.index + 1} - Acción: ${form.action}, Método: ${form.method}`;
+                    listItem.appendChild(label);
+                    formList.appendChild(listItem);
+                });
+            } else {
+                document.getElementById('formList').textContent = 'No se encontraron formularios en esta página.';
+            }
+        });
+    });
+
+    // Manejar clic en el botón de autocompletar
+    document.getElementById('startAutofill').addEventListener('click', () => {
+        const selectedForms = [];
+        const checkboxes = document.querySelectorAll('#formList input[type="checkbox"]:checked');
+        checkboxes.forEach(checkbox => {
+            selectedForms.push(parseInt(checkbox.value));
+        });
+
+        if (selectedForms.length === 0) {
+            alert('Por favor, selecciona al menos un formulario para autocompletar.');
+            return;
+        }
+
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { type: 'AUTOCOMPLETE_FORMS', selectedForms }, (response) => {
+                if (response && response.status) {
+                    alert('Formulario(s) autocompletado(s) con éxito.');
+                } else {
+                    alert('Error al autocompletar el/los formulario(s): ' + response.error);
+                }
+            });
+        });
+    });
+});
+
+/* Fin ai-form-autocomplete\popup\popup.js */
+
+/* Inicio ai-form-autocomplete\styles\content.css */
+.incomplete-field {
+  border: 2px solid red !important;
+}
+
+.form-autocomplete-tooltip {
+  position: absolute;
+  color: red;
+  font-size: 12px;
+}
+
+/* Fin ai-form-autocomplete\styles\content.css */
+
+/* Inicio ai-form-autocomplete\utils\api.js */
+export function getEnvironmentVariable(key) {
+    return process.env[key];
+}
+/* Fin ai-form-autocomplete\utils\api.js */

@@ -1,0 +1,918 @@
+
+/* Inicio app.js */
+const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs').promises;
+const path = require('path');
+const cors = require('cors');
+
+const app = express();
+const puerto = 3000;
+
+app.use(cors()); 
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+const rutaDb = path.join(__dirname, 'db.json');
+
+async function leerDb() {
+  try {
+    const datos = await fs.readFile(rutaDb, 'utf8');
+    return JSON.parse(datos);
+  } catch (error) {
+    return { categorias: [], configuraciones: {} };
+  }
+}
+
+async function escribirDb(datos) {
+  await fs.writeFile(rutaDb, JSON.stringify(datos, null, 2));
+}
+
+async function simularErrores(req, res, next) {
+  const db = await leerDb();
+  const { path } = req;
+  const configuracion = db.configuraciones[path] || 'success';
+
+  if (configuracion === 'error') {
+    return res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "504",
+        reason: "Algo salió mal",
+        message: "No fue posible cargar la información. Intenta de nuevo",
+        domain: path
+      }]
+    });
+  }
+
+  if (configuracion === 'empty' && path === '/api/v1/ch-ms-category-management-pricing/categories') {
+    return res.status(404).json({
+      errors: [{
+        type: "Error",
+        code: "CTB201",
+        reason: "Lo sentimos",
+        message: "Aun no tienes Categorias. Crea las categorias que deseas administrar.",
+        domain: path
+      }]
+    });
+  }
+
+  next();
+}
+
+app.use(simularErrores);
+
+app.post('/api/v1/ch-ms-category-management-pricing/create-category', async (req, res) => {
+  const db = await leerDb();
+  const { name, description, optionList } = req.body.data.attributes.param.create;
+
+  const nuevaCategoria = {
+    categoryId: db.categorias.length + 1,
+    categoryCode: `CAT${String(db.categorias.length + 1).padStart(3, '0')}`,
+    categoryName: name,
+    categoryDescription: description,
+    categoryOptionsCount: optionList.length,
+    categoryAssignedPlan: null,
+    optionsList: optionList.map((opcion, index) => ({
+      optionId: db.categorias.reduce((acc, cat) => acc + cat.optionsList.length, 0) + index + 1,
+      optionCode: opcion.optionCode,
+      optionName: opcion.description
+    }))
+  };
+
+  db.categorias.push(nuevaCategoria);
+  await escribirDb(db);
+
+  res.json({
+    meta: { code: "200", message: "Transacción Exitosa" },
+    transactionRequest: { request: req.body },
+    transactionResponse: {
+      response: {
+        type: "PRICINGCREATECATEGORYRS",
+        id: req.body.data.id,
+        attributes: {
+          timestamp: new Date().toISOString(),
+          appId: "MACD",
+          appModule: "Pricing - Categories",
+          result: nuevaCategoria
+        }
+      }
+    }
+  });
+});
+
+app.get('/api/v1/ch-ms-category-management-pricing/categories', async (req, res) => {
+  const db = await leerDb();
+  const { optionName, categoryName, pageSize = 10, pageNumber = 1, sortBy = 'categoryName' } = req.query;
+
+  const pageSizeInt = parseInt(pageSize);
+  const pageNumberInt = parseInt(pageNumber);
+
+  let categoriasFiltradas = db.categorias;
+
+  if (categoryName) {
+    categoriasFiltradas = categoriasFiltradas.filter(cat =>
+      cat.categoryName.toLowerCase().includes(categoryName.toLowerCase())
+    );
+  }
+
+  if (optionName) {
+    categoriasFiltradas = categoriasFiltradas.filter(cat =>
+      cat.optionsList.some(opcion =>
+        opcion.optionName.toLowerCase().includes(optionName.toLowerCase())
+      )
+    );
+  }
+
+  const totalRegistros = categoriasFiltradas.length;
+  const indiceInicio = (pageNumberInt - 1) * pageSizeInt;
+  const indiceFin = indiceInicio + pageSizeInt;
+
+  categoriasFiltradas.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
+
+  const categoriasPaginadas = categoriasFiltradas.slice(indiceInicio, indiceFin);
+
+  if (categoriasPaginadas.length === 0) {
+    return res.status(404).json({
+      errors: [{
+        type: "Error",
+        code: "CTB202",
+        reason: "Lo sentimos",
+        message: "Tu búsqueda no obtuvo resultados. Prueba con otra información.",
+        domain: "/api/v1/ch-ms-category-management-pricing/categories"
+      }]
+    });
+  }
+
+  res.json({
+    meta: { code: "200", message: "Transacción Exitosa" },
+    transactionRequest: { request: req.query },
+    transactionResponse: {
+      response: {
+        type: "PRICINGRETRIEVECATEGORIESRS",
+        id: null,
+        attributes: {
+          timestamp: new Date().toISOString(),
+          appId: "MACD",
+          appModule: "Pricing - Categories",
+          result: {
+            pagination: {
+              sortBy,
+              pageNumber: pageNumberInt,
+              pageSize: pageSizeInt,
+              totalRecords: totalRegistros
+            },
+            categoryList: categoriasPaginadas
+          }
+        }
+      }
+    }
+  });
+});
+
+app.get('/api/v1/ch-ms-category-management-pricing/validate-category-name', async (req, res) => {
+  const db = await leerDb();
+  const { categoryName } = req.query;
+
+  const existe = db.categorias.some(cat =>
+    cat.categoryName.toLowerCase() === categoryName.toLowerCase()
+  );
+
+  if (existe) {
+    return res.status(400).json({
+      errors: [{
+        type: "Error",
+        code: "CTB203",
+        reason: "Lo sentimos",
+        message: "El nombre de la categoría ya se encuentra en uso. Elige otro.",
+        domain: "/api/v1/ch-ms-category-management-pricing/validate-category-name"
+      }]
+    });
+  }
+
+  res.json({
+    meta: { code: "200", message: "Transacción Exitosa" },
+    transactionRequest: { request: { categoryName } },
+    transactionResponse: {
+      response: {
+        type: "PRICINGVALIDATECATEGORYNAMERS",
+        id: null,
+        attributes: {
+          timestamp: new Date().toISOString(),
+          appId: "MACD",
+          appModule: "Pricing - Categories",
+          result: {
+            valid: true,
+            description: "Nombre de categoría disponible"
+          }
+        }
+      }
+    }
+  });
+});
+
+app.get('/api/v1/ch-ms-category-management-pricing/options', async (req, res) => {
+  const db = await leerDb();
+  const { channel } = req.query;
+
+  const opciones = [
+    // Aquí puedes agregar las opciones desde la base de datos o de una fuente de datos estática
+    {
+      id: 0,
+      optionCode: "3105",
+      state: "Active",
+      active: true,
+      description: "Actualizacion de solicitudes de aprobaciones de convenios Libranzas",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "0705",
+      state: "Active",
+      active: true,
+      description: "Administrar productos de terceros",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "6100",
+      state: "Active",
+      active: true,
+      description: "Autenticación ANF",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "385",
+      state: "Active",
+      active: true,
+      description: "Autenticación transitoria Sucurtal Virtual Negocios",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "359",
+      state: "Active",
+      active: true,
+      description: "Balances SVN",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "6122",
+      state: "Active",
+      active: true,
+      description: "Cargar archivos de instruccion y soportes",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "8005",
+      state: "Active",
+      active: true,
+      description: "Consulta Estado Registro",
+      inUse: false
+    },
+    {
+      id: 0,
+      optionCode: "0327",
+      state: "Active",
+      active: true,
+      description: "Consulta Listado Inversion Virtual",
+      inUse: false
+    },
+    {
+      id: 13,
+      optionCode: "4112",
+      state: "Active",
+      active: true,
+      description: "Consulta cuentas y saldos cliente de leasing",
+      inUse: true
+    },
+    {
+      id: 0,
+      optionCode: "3100",
+      state: "Active",
+      active: true,
+      description: "Consulta de Convenios por NIT",
+      inUse: false
+    }
+  ];
+
+  res.json({
+    meta: { code: "200", message: "Transacción Exitosa" },
+    transactionRequest: { request: { channel } },
+    transactionResponse: {
+      response: {
+        type: "PRICINGRETRIEVEOPTIONSRS",
+        id: null,
+        attributes: {
+          timestamp: new Date().toISOString(),
+          appId: "MACD",
+          appModule: "Pricing - Options",
+          result: {
+            optionList: opciones
+          }
+        }
+      }
+    }
+  });
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/api/settings', async (req, res) => {
+  const db = await leerDb();
+  res.json(db.configuraciones);
+});
+
+app.post('/api/settings', async (req, res) => {
+  const db = await leerDb();
+  db.configuraciones = req.body;
+  await escribirDb(db);
+  res.json({ message: 'Configuraciones actualizadas exitosamente' });
+});
+app.use(cors({
+  origin: 'http://localhost:4200' // Habilitar CORS para tu aplicación Angular
+}));
+app.listen(puerto, () => {
+  console.log(`Servidor corriendo en http://localhost:${puerto}`);
+});
+
+/* Fin app.js */
+
+/* Inicio db.json */
+{
+  "categorias": [
+    {
+      "categoryId": 1,
+      "categoryCode": "CAT001",
+      "categoryName": "Factura",
+      "categoryDescription": "Factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 1,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        }
+      ]
+    },
+    {
+      "categoryId": 2,
+      "categoryCode": "CAT002",
+      "categoryName": "Factura 1",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 2,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 3,
+      "categoryCode": "CAT003",
+      "categoryName": "Factura 2",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 3,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 4,
+      "categoryCode": "CAT004",
+      "categoryName": "Factura 3",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 4,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 5,
+      "categoryCode": "CAT005",
+      "categoryName": "Factura 4",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 5,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 6,
+      "categoryCode": "CAT006",
+      "categoryName": "Factura 5",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 6,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 7,
+      "categoryCode": "CAT007",
+      "categoryName": "Factura 6",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 7,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 8,
+      "categoryCode": "CAT008",
+      "categoryName": "Factura 7",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 8,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 9,
+      "categoryCode": "CAT009",
+      "categoryName": "Factura 8",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 9,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 10,
+      "categoryCode": "CAT010",
+      "categoryName": "Factura 9",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 10,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 11,
+      "categoryCode": "CAT011",
+      "categoryName": "Factura 10",
+      "categoryDescription": "Descripción de factura",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 11,
+          "optionCode": "4100",
+          "optionName": ""
+        }
+      ]
+    },
+    {
+      "categoryId": 12,
+      "categoryCode": "CAT012",
+      "categoryName": "Arroz",
+      "categoryDescription": "Con pollo es lo mas delicioso",
+      "categoryOptionsCount": 2,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 12,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        },
+        {
+          "optionId": 13,
+          "optionCode": "TX009",
+          "optionName": "Pago de Crédito"
+        }
+      ]
+    },
+    {
+      "categoryId": 13,
+      "categoryCode": "CAT013",
+      "categoryName": "cad",
+      "categoryDescription": "asd",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 14,
+          "optionCode": "TX016",
+          "optionName": "Pago de Internet"
+        }
+      ]
+    },
+    {
+      "categoryId": 14,
+      "categoryCode": "CAT014",
+      "categoryName": "asd",
+      "categoryDescription": "423",
+      "categoryOptionsCount": 0,
+      "categoryAssignedPlan": null,
+      "optionsList": []
+    },
+    {
+      "categoryId": 15,
+      "categoryCode": "CAT015",
+      "categoryName": "Factor",
+      "categoryDescription": "casa",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 15,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        }
+      ]
+    },
+    {
+      "categoryId": 16,
+      "categoryCode": "CAT016",
+      "categoryName": "Facccc",
+      "categoryDescription": "tttuura",
+      "categoryOptionsCount": 2,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 16,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        },
+        {
+          "optionId": 17,
+          "optionCode": "TX003",
+          "optionName": "Consulta de Saldo"
+        }
+      ]
+    },
+    {
+      "categoryId": 17,
+      "categoryCode": "CAT017",
+      "categoryName": "Facturat",
+      "categoryDescription": "asd",
+      "categoryOptionsCount": 1,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 18,
+          "optionCode": "TX021",
+          "optionName": "Pago de Impuestos Departamentales"
+        }
+      ]
+    }
+  ],
+  "configuraciones": {
+    "/api/v1/ch-ms-category-management-pricing/create-category": "success",
+    "/api/v1/ch-ms-category-management-pricing/categories": "success"
+  }
+}
+/* Fin db.json */
+
+/* Inicio package.json */
+{
+  "scripts": {
+    "pricing": "nodemon api-pricing/app.js"
+  },
+  "dependencies": {
+    "@types/micromatch": "^4.0.9",
+    "asciichart": "^1.5.25",
+    "battery-level": "^3.0.0",
+    "blessed": "^0.1.80",
+    "blessed-contrib": "^4.10.0",
+    "chalk": "^4.1.2",
+    "cli-progress": "^3.12.0",
+    "cli-table3": "^0.6.5",
+    "console-clear": "^1.1.1",
+    "cors": "^2.8.5",
+    "escodegen": "^2.1.0",
+    "esprima": "^4.0.1",
+    "express": "^4.19.2",
+    "figlet": "^1.7.0",
+    "fs-extra": "^11.2.0",
+    "ignore": "^5.3.1",
+    "is-charging": "^2.0.0",
+    "micromatch": "^4.0.7",
+    "node-notifier": "^10.0.1",
+    "node-os-utils": "^1.3.7",
+    "os": "^0.1.2",
+    "os-utils": "^0.0.14",
+    "readline": "^1.3.0",
+    "uuid": "^10.0.0"
+  }
+}
+
+/* Fin package.json */
+
+/* Inicio public\dashboard.html */
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control API de Pricing</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center text-blue-600">Panel de Control API de Pricing</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Configuraciones</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoCrearCategoria">Crear Categoría:</label>
+                        <select id="estadoCrearCategoria" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoListarCategorias">Listar Categorías:</label>
+                        <select id="estadoListarCategorias" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="error">Error</option>
+                            <option value="empty">Vacío</option>
+                        </select>
+                    </div>
+                    <button id="guardarConfiguraciones" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Guardar Configuraciones
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Crear Categoría</h2>
+                <div class="space-y-4">
+                    <input id="nombreCategoria" type="text" placeholder="Nombre de Categoría" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="descripcionCategoria" type="text" placeholder="Descripción de Categoría" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <div id="opcionesList" class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <select class="codigoOpcion w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                                <option value="4100">Transferencia Bancaria</option>
+                                <option value="TX002">Pago Bancaria</option>
+                                <option value="TX003">Consulta de Saldo</option>
+                                <option value="TX004">Retiro de Efectivo</option>
+                                <option value="TX005">Depósito Bancaria</option>
+                                <option value="TX006">Pago de Préstamos</option>
+                                <option value="TX007">Consulta de Movimientos</option>
+                                <option value="TX008">Recarga de Tarjeta</option>
+                                <option value="TX009">Pago de Tarjeta de Crédito</option>
+                                <option value="TX010">Transferencia Internacional</option>
+                            </select>
+                            <input type="text" placeholder="Descripción de Opción" class="descripcionOpcion w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                            <button class="agregarOpcion bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">+</button>
+                        </div>
+                    </div>
+                    <button id="crearCategoria" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Crear Categoría
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
+            <h2 class="text-xl font-semibold mb-4">Listar Categorías</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <input id="buscarNombreCategoria" type="text" placeholder="Buscar por Nombre de Categoría" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                <input id="buscarNombreOpcion" type="text" placeholder="Buscar por Nombre de Opción" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                <select id="ordenarPor" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <option value="categoryName">Ordenar por Nombre</option>
+                    <option value="categoryCode">Ordenar por Código</option>
+                </select>
+            </div>
+            <button id="buscarCategorias" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Buscar
+            </button>
+            <div id="listaCategorias" class="mt-4"></div>
+        </div>
+
+        <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
+            <h2 class="text-xl font-semibold mb-4">Validar Nombre de Categoría</h2>
+            <div class="flex space-x-4">
+                <input id="validarNombreCategoria" type="text" placeholder="Nombre de Categoría a Validar" class="flex-grow px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                <button id="validarCategoria" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Validar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
+
+    async function guardarConfiguraciones() {
+        const configuraciones = {
+            '/api/v1/ch-ms-category-management-pricing/create-category': document.getElementById('estadoCrearCategoria').value,
+            '/api/v1/ch-ms-category-management-pricing/categories': document.getElementById('estadoListarCategorias').value
+        };
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(configuraciones)
+            });
+            if (response.ok) {
+                toastr.success('Configuraciones guardadas exitosamente');
+            } else {
+                toastr.error('Error al guardar las configuraciones');
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function crearCategoria() {
+        const nombre = document.getElementById('nombreCategoria').value;
+        const descripcion = document.getElementById('descripcionCategoria').value;
+        const opciones = Array.from(document.querySelectorAll('#opcionesList .flex')).map(option => ({
+            optionCode: option.querySelector('.codigoOpcion').value,
+            description: option.querySelector('.descripcionOpcion').value,
+            inUse: true
+        }));
+        try {
+            const response = await fetch('/api/v1/ch-ms-category-management-pricing/create-category', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    data: {
+                        type: "PRICINGCREATECATEGORYRQ",
+                        id: crypto.randomUUID(),
+                        attributes: {
+                            timestamp: new Date().toISOString(),
+                            appId: "ADL",
+                            appModule: "002-1",
+                            param: {
+                                create: {
+                                    name: nombre,
+                                    description: descripcion,
+                                    optionList: opciones
+                                }
+                            }
+                        }
+                    }
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success(result.meta.message);
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function listarCategorias() {
+        const nombreCategoria = document.getElementById('buscarNombreCategoria').value;
+        const nombreOpcion = document.getElementById('buscarNombreOpcion').value;
+        const ordenarPor = document.getElementById('ordenarPor').value;
+        try {
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/categories?categoryName=${nombreCategoria}&optionName=${nombreOpcion}&sortBy=${ordenarPor}`);
+            const result = await response.json();
+            
+            const listaCategorias = document.getElementById('listaCategorias');
+            listaCategorias.innerHTML = '';
+            
+            if (result.errors) {
+                toastr.warning(result.errors[0].message);
+                return;
+            }
+            
+            result.transactionResponse.response.attributes.result.categoryList.forEach(categoria => {
+                const categoriaDiv = document.createElement('div');
+                categoriaDiv.className = 'bg-gray-100 p-4 mb-4 rounded';
+                categoriaDiv.innerHTML = `
+                    <h3 class="font-bold">${categoria.categoryName}</h3>
+                    <p class="text-sm text-gray-600">${categoria.categoryDescription}</p>
+                    <p class="text-sm">Código: ${categoria.categoryCode}</p>
+                    <p class="text-sm">Opciones: ${categoria.categoryOptionsCount}</p>
+                `;
+                listaCategorias.appendChild(categoriaDiv);
+            });
+        } catch (error) {
+            toastr.error('Error al listar las categorías');
+        }
+    }
+
+    async function validarNombreCategoria() {
+        const nombreCategoria = document.getElementById('validarNombreCategoria').value;
+        try {
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/validate-category-name?categoryName=${nombreCategoria}`);
+            const result = await response.json();
+            
+            if (result.errors) {
+                toastr.error(result.errors[0].message);
+            } else {
+                toastr.success(result.transactionResponse.response.attributes.result.description);
+            }
+        } catch (error) {
+            toastr.error('Error al validar el nombre de la categoría');
+        }
+    }
+
+    document.getElementById('guardarConfiguraciones').addEventListener('click', guardarConfiguraciones);
+    document.getElementById('crearCategoria').addEventListener('click', crearCategoria);
+    document.getElementById('buscarCategorias').addEventListener('click', listarCategorias);
+    document.getElementById('validarCategoria').addEventListener('click', validarNombreCategoria);
+
+    fetch('/api/settings').then(response => response.json()).then(configuraciones => {
+        document.getElementById('estadoCrearCategoria').value = configuraciones['/api/v1/ch-ms-category-management-pricing/create-category'] || 'success';
+        document.getElementById('estadoListarCategorias').value = configuraciones['/api/v1/ch-ms-category-management-pricing/categories'] || 'success';
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('agregarOpcion')) {
+            const opcionesList = document.getElementById('opcionesList');
+            const nuevaOpcion = document.createElement('div');
+            nuevaOpcion.className = 'flex items-center space-x-2';
+            nuevaOpcion.innerHTML = `
+                <select class="codigoOpcion w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <option value="4100">Transferencia Bancaria</option>
+                    <option value="TX002">Pago Bancaria</option>
+                    <option value="TX003">Consulta de Saldo</option>
+                    <option value="TX004">Retiro de Efectivo</option>
+                    <option value="TX005">Depósito Bancaria</option>
+                    <option value="TX006">Pago de Préstamos</option>
+                    <option value="TX007">Consulta de Movimientos</option>
+                    <option value="TX008">Recarga de Tarjeta</option>
+                    <option value="TX009">Pago de Tarjeta de Crédito</option>
+                    <option value="TX010">Transferencia Internacional</option>
+                </select>
+                <input type="text" placeholder="Descripción de Opción" class="descripcionOpcion w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                <button class="agregarOpcion bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">+</button>
+            `;
+            opcionesList.appendChild(nuevaOpcion);
+        }
+    });
+
+    </script>
+</body>
+</html>
+
+/* Fin public\dashboard.html */

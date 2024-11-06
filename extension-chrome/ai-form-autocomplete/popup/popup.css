@@ -1,0 +1,57 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+#popup {
+  text-align: center;
+}
+
+#apiKeySection {
+  margin-bottom: 20px;
+}
+
+#apiKeyInput {
+  width: 80%;
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+#saveApiKeyButton {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#saveApiKeyButton:hover {
+  background-color: #218838;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#formList {
+  text-align: left;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+#formList li {
+  margin-bottom: 5px;
+}

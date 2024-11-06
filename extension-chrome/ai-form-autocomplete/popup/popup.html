@@ -1,0 +1,30 @@
+<!-- Inicio ai-form-autocomplete/popup/popup.html -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Form Autocomplete</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="popup">
+      <h1>AI Form Autocomplete</h1>
+      <div id="apiKeySection">
+        <input
+          type="password"
+          id="apiKeyInput"
+          placeholder="Ingresa tu clave API de OpenAI"
+        />
+        <button id="saveApiKeyButton">Guardar Clave API</button>
+      </div>
+      <h2>Formularios Detectados:</h2>
+      <ul id="formList"></ul>
+      <button id="startAutofill">
+        Autocompletar Formularios Seleccionados
+      </button>
+      <button id="reloadForms">Recargar Formularios</button>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
+
