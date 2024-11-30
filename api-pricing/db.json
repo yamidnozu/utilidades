@@ -3,265 +3,296 @@
     {
       "categoryId": 1,
       "categoryCode": "CAT001",
-      "categoryName": "Factura",
-      "categoryDescription": "Factura",
-      "categoryOptionsCount": 1,
+      "categoryName": "Básico",
+      "categoryDescription": "Servicios básicos y esenciales",
+      "categoryOptionsCount": 2,
       "categoryAssignedPlan": null,
       "optionsList": [
         {
           "optionId": 1,
+          "optionCode": "TX001",
+          "optionName": "Consulta de Saldo"
+        },
+        {
+          "optionId": 2,
           "optionCode": "TX002",
-          "optionName": "Pago Bancario"
+          "optionName": "Transferencias"
         }
       ]
     },
     {
       "categoryId": 2,
       "categoryCode": "CAT002",
-      "categoryName": "Factura 1",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
+      "categoryName": "Avanzado",
+      "categoryDescription": "Servicios avanzados",
+      "categoryOptionsCount": 2,
       "categoryAssignedPlan": null,
       "optionsList": [
         {
-          "optionId": 2,
-          "optionCode": "4100",
-          "optionName": ""
+          "optionId": 3,
+          "optionCode": "TX003",
+          "optionName": "Pagos en Línea"
+        },
+        {
+          "optionId": 4,
+          "optionCode": "TX004",
+          "optionName": "Inversiones"
         }
       ]
     },
     {
       "categoryId": 3,
       "categoryCode": "CAT003",
-      "categoryName": "Factura 2",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 3,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 4,
-      "categoryCode": "CAT004",
-      "categoryName": "Factura 3",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 4,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 5,
-      "categoryCode": "CAT005",
-      "categoryName": "Factura 4",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
+      "categoryName": "Empresarial",
+      "categoryDescription": "Servicios para empresas",
+      "categoryOptionsCount": 2,
       "categoryAssignedPlan": null,
       "optionsList": [
         {
           "optionId": 5,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 6,
-      "categoryCode": "CAT006",
-      "categoryName": "Factura 5",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
+          "optionCode": "TX005",
+          "optionName": "Gestión de Nómina"
+        },
         {
           "optionId": 6,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 7,
-      "categoryCode": "CAT007",
-      "categoryName": "Factura 6",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 7,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 8,
-      "categoryCode": "CAT008",
-      "categoryName": "Factura 7",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 8,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 9,
-      "categoryCode": "CAT009",
-      "categoryName": "Factura 8",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 9,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 10,
-      "categoryCode": "CAT010",
-      "categoryName": "Factura 9",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 10,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 11,
-      "categoryCode": "CAT011",
-      "categoryName": "Factura 10",
-      "categoryDescription": "Descripción de factura",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 11,
-          "optionCode": "4100",
-          "optionName": ""
-        }
-      ]
-    },
-    {
-      "categoryId": 12,
-      "categoryCode": "CAT012",
-      "categoryName": "Arroz",
-      "categoryDescription": "Con pollo es lo mas delicioso",
-      "categoryOptionsCount": 2,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 12,
-          "optionCode": "TX002",
-          "optionName": "Pago Bancario"
-        },
-        {
-          "optionId": 13,
-          "optionCode": "TX009",
-          "optionName": "Pago de Crédito"
-        }
-      ]
-    },
-    {
-      "categoryId": 13,
-      "categoryCode": "CAT013",
-      "categoryName": "cad",
-      "categoryDescription": "asd",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 14,
-          "optionCode": "TX016",
-          "optionName": "Pago de Internet"
-        }
-      ]
-    },
-    {
-      "categoryId": 14,
-      "categoryCode": "CAT014",
-      "categoryName": "asd",
-      "categoryDescription": "423",
-      "categoryOptionsCount": 0,
-      "categoryAssignedPlan": null,
-      "optionsList": []
-    },
-    {
-      "categoryId": 15,
-      "categoryCode": "CAT015",
-      "categoryName": "Factor",
-      "categoryDescription": "casa",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 15,
-          "optionCode": "TX002",
-          "optionName": "Pago Bancario"
-        }
-      ]
-    },
-    {
-      "categoryId": 16,
-      "categoryCode": "CAT016",
-      "categoryName": "Facccc",
-      "categoryDescription": "tttuura",
-      "categoryOptionsCount": 2,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 16,
-          "optionCode": "TX002",
-          "optionName": "Pago Bancario"
-        },
-        {
-          "optionId": 17,
-          "optionCode": "TX003",
-          "optionName": "Consulta de Saldo"
-        }
-      ]
-    },
-    {
-      "categoryId": 17,
-      "categoryCode": "CAT017",
-      "categoryName": "Facturat",
-      "categoryDescription": "asd",
-      "categoryOptionsCount": 1,
-      "categoryAssignedPlan": null,
-      "optionsList": [
-        {
-          "optionId": 18,
-          "optionCode": "TX021",
-          "optionName": "Pago de Impuestos Departamentales"
+          "optionCode": "TX006",
+          "optionName": "Pagos Internacionales"
         }
       ]
     }
   ],
   "configuraciones": {
     "/api/v1/ch-ms-category-management-pricing/create-category": "success",
-    "/api/v1/ch-ms-category-management-pricing/categories": "success"
-  }
+    "/api/v1/ch-ms-category-management-pricing/categories": "success",
+    "/api/v1/ch-ms-relation-management-pricing/customer-plan": "success",
+    "/api/v1/ch-ms-relation-management-pricing/customer-plan-": "success",
+    "/api/v1/ch-ms-relation-management-pricing/customer-plan-by-document": "success",
+    "/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage": "success",
+    "/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan": "success",
+    "/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method": "success",
+    "/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method": "success"
+  },
+  "customerPlans": [
+    {
+      "planId": 1,
+      "chargePercentage": 0.15,
+      "state": "Pendiente",
+      "paymentMethod": {
+        "number": "001-123456-78",
+        "type": "CUENTAS_DEPOSITOS",
+        "class": "CUENTA_DE_AHORRO"
+      },
+      "documentType": "CC",
+      "documentNumber": "1012345678",
+      "purchaseDate": "2023-01-10",
+      "activationDate": "2023-01-15"
+    },
+    {
+      "planId": 2,
+      "chargePercentage": 0.2,
+      "state": "Activo",
+      "paymentMethod": {
+        "number": "002-876543-21",
+        "type": "CUENTAS_DEPOSITOS",
+        "class": "CUENTA_CORRIENTE"
+      },
+      "documentType": "NIT",
+      "documentNumber": "900123456",
+      "purchaseDate": "2023-02-20",
+      "activationDate": "2023-02-25"
+    },
+    {
+      "planId": 3,
+      "chargePercentage": 0.25,
+      "state": "Activo",
+      "paymentMethod": {
+        "number": "003-112233-44",
+        "type": "CUENTAS_DEPOSITOS",
+        "class": "CUENTA_CORRIENTE"
+      },
+      "documentType": "CC",
+      "documentNumber": "1023456789",
+      "purchaseDate": "2023-03-05",
+      "activationDate": "2023-03-10"
+    }
+  ],
+  "paymentMethods": [
+    {
+      "documentType": "CC",
+      "documentNumber": "1012345678",
+      "paymentMethod": {
+        "number": "001-123456-78",
+        "methodClass": "CUENTA_DE_AHORRO",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    },
+    {
+      "documentType": "CC",
+      "documentNumber": "1012345678",
+      "paymentMethod": {
+        "methodClass": "CUENTA_DE_AHORRO",
+        "number": "001-123456-79",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    },
+    {
+      "documentType": "NIT",
+      "documentNumber": "900123456",
+      "paymentMethod": {
+        "number": "002-876543-21",
+        "methodClass": "CUENTA_CORRIENTE",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    },
+    {
+      "documentType": "CC",
+      "documentNumber": "1023456789",
+      "paymentMethod": {
+        "number": "003-112233-44",
+        "methodClass": "CUENTA_CORRIENTE",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    }
+  ],
+  "services": [
+    {
+      "serviceId": 1,
+      "serviceTypeName": "Plan",
+      "serviceName": "Plan Básico",
+      "serviceDescription": "Acceso a funcionalidades básicas.",
+      "rateValue": 50,
+      "creationDate": "2023-01-01",
+      "gracePeriod": 30,
+      "minimiunStay": 6,
+      "stateService": true,
+      "orderOffering": 1,
+      "color": "Azul",
+      "level": 1,
+      "icon": "icon_basic",
+      "environmentName": "SVE",
+      "environmentState": "Activo",
+      "categories": [
+        {
+          "categoryId": 1,
+          "categoryName": "Básico",
+          "categoryDescription": "Servicios básicos y esenciales",
+          "categoryNamePublic": "Categoría Básica"
+        }
+      ],
+      "attributes": [
+        {
+          "attributeId": 1,
+          "attributeName": "Número de Usuarios",
+          "attributeDescripcion": "Usuarios permitidos",
+          "attributeState": true,
+          "serviceAttributeState": true,
+          "value": "5",
+          "rateBehavior": null,
+          "typeCampForm": "Número"
+        }
+      ]
+    },
+    {
+      "serviceId": 2,
+      "serviceTypeName": "Plan",
+      "serviceName": "Plan Profesional",
+      "serviceDescription": "Funciones avanzadas para profesionales.",
+      "rateValue": 75,
+      "creationDate": "2023-02-01",
+      "gracePeriod": 15,
+      "minimiunStay": 12,
+      "stateService": true,
+      "orderOffering": 2,
+      "color": "Verde",
+      "level": 2,
+      "icon": "icon_professional",
+      "environmentName": "SVE",
+      "environmentState": "Activo",
+      "categories": [
+        {
+          "categoryId": 1,
+          "categoryName": "Básico",
+          "categoryDescription": "Servicios básicos y esenciales",
+          "categoryNamePublic": "Categoría Básica"
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Avanzado",
+          "categoryDescription": "Servicios avanzados",
+          "categoryNamePublic": "Categoría Avanzada"
+        }
+      ],
+      "attributes": [
+        {
+          "attributeId": 2,
+          "attributeName": "Número de Usuarios",
+          "attributeDescripcion": "Usuarios permitidos",
+          "attributeState": true,
+          "serviceAttributeState": true,
+          "value": "15",
+          "rateBehavior": null,
+          "typeCampForm": "Número"
+        }
+      ]
+    },
+    {
+      "serviceId": 3,
+      "serviceTypeName": "Plan",
+      "serviceName": "Plan Empresarial",
+      "serviceDescription": "Soluciones para empresas.",
+      "rateValue": 120,
+      "creationDate": "2023-03-01",
+      "gracePeriod": 0,
+      "minimiunStay": 24,
+      "stateService": true,
+      "orderOffering": 3,
+      "color": "Rojo",
+      "level": 3,
+      "icon": "icon_business",
+      "environmentName": "SVE",
+      "environmentState": "Activo",
+      "categories": [
+        {
+          "categoryId": 1,
+          "categoryName": "Básico",
+          "categoryDescription": "Servicios básicos y esenciales",
+          "categoryNamePublic": "Categoría Básica"
+        },
+        {
+          "categoryId": 2,
+          "categoryName": "Avanzado",
+          "categoryDescription": "Servicios avanzados",
+          "categoryNamePublic": "Categoría Avanzada"
+        },
+        {
+          "categoryId": 3,
+          "categoryName": "Empresarial",
+          "categoryDescription": "Servicios para empresas",
+          "categoryNamePublic": "Categoría Empresarial"
+        }
+      ],
+      "attributes": [
+        {
+          "attributeId": 3,
+          "attributeName": "Número de Usuarios",
+          "attributeDescripcion": "Usuarios permitidos",
+          "attributeState": true,
+          "serviceAttributeState": true,
+          "value": "50",
+          "rateBehavior": null,
+          "typeCampForm": "Número"
+        },
+        {
+          "attributeId": 4,
+          "attributeName": "Soporte Prioritario",
+          "attributeDescripcion": "Acceso a soporte técnico prioritario",
+          "attributeState": true,
+          "serviceAttributeState": true,
+          "value": "Incluido",
+          "rateBehavior": null,
+          "typeCampForm": "Texto"
+        }
+      ]
+    }
+  ]
 }

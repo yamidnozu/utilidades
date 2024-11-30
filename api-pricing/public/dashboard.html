@@ -1,3 +1,4 @@
+<!-- Inicio public/dashboard.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,8 +15,9 @@
         <h1 class="text-3xl font-bold mb-8 text-center text-blue-600">Panel de Control API de Pricing</h1>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Configuraciones existentes -->
             <div class="bg-white shadow-md rounded px-6 py-4">
-                <h2 class="text-xl font-semibold mb-4">Configuraciones</h2>
+                <h2 class="text-xl font-semibold mb-4">Configuraciones Generales</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700" for="estadoCrearCategoria">Crear Categoría:</label>
@@ -32,12 +34,30 @@
                             <option value="empty">Vacío</option>
                         </select>
                     </div>
+                    <!-- Nuevas configuraciones para Métodos de Pago -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoGetPaymentMethod">Obtener Método de Pago:</label>
+                        <select id="estadoGetPaymentMethod" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="CTB007">Error CTB007</option>
+                            <option value="CTB008">Error CTB008</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoMatriculatePaymentMethod">Matricular/Actualizar Método de Pago:</label>
+                        <select id="estadoMatriculatePaymentMethod" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="CTB007">Error CTB007</option>
+                            <option value="CTB008">Error CTB008</option>
+                        </select>
+                    </div>
                     <button id="guardarConfiguraciones" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Guardar Configuraciones
                     </button>
                 </div>
             </div>
 
+            <!-- Crear Categoría existente -->
             <div class="bg-white shadow-md rounded px-6 py-4">
                 <h2 class="text-xl font-semibold mb-4">Crear Categoría</h2>
                 <div class="space-y-4">
@@ -47,10 +67,10 @@
                         <div class="flex items-center space-x-2">
                             <select class="codigoOpcion w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
                                 <option value="4100">Transferencia Bancaria</option>
-                                <option value="TX002">Pago Bancaria</option>
+                                <option value="TX002">Pago Bancario</option>
                                 <option value="TX003">Consulta de Saldo</option>
                                 <option value="TX004">Retiro de Efectivo</option>
-                                <option value="TX005">Depósito Bancaria</option>
+                                <option value="TX005">Depósito Bancario</option>
                                 <option value="TX006">Pago de Préstamos</option>
                                 <option value="TX007">Consulta de Movimientos</option>
                                 <option value="TX008">Recarga de Tarjeta</option>
@@ -68,6 +88,127 @@
             </div>
         </div>
 
+        <!-- Sección nueva: Gestionar Customer Plans -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Crear Customer Plan -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Crear Plan de Cliente</h2>
+                <div class="space-y-4">
+                    <input id="planId" type="number" placeholder="ID del Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="chargePercentage" type="number" step="0.01" placeholder="Porcentaje de Cobro" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <select id="statePlan" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-500">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Método de Pago:</label>
+                        <input id="paymentNumber" type="text" placeholder="Número" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="paymentType" type="text" placeholder="Tipo" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="paymentClass" type="text" placeholder="Clase" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <input id="documentType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="documentNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <button id="crearCustomerPlan" class="w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Crear Plan de Cliente
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cambiar Plan de Cliente -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Cambiar Plan de Cliente</h2>
+                <div class="space-y-4">
+                    <input id="currentPlanId" type="number" placeholder="ID del Plan Actual" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="targetPlanId" type="number" placeholder="ID del Nuevo Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nuevo Método de Pago:</label>
+                        <input id="newPaymentNumber" type="text" placeholder="Número" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="newPaymentType" type="text" placeholder="Tipo" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="newPaymentClass" type="text" placeholder="Clase" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <button id="cambiarPlanCliente" class="w-full bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Cambiar Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección nueva: Cambiar Porcentaje de Cobro y Recuperar Planes -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Cambiar Porcentaje de Cobro -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Cambiar Porcentaje de Cobro</h2>
+                <div class="space-y-4">
+                    <input id="chgDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="chgDocNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="chgPlanId" type="number" placeholder="ID del Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="newChargePercentage" type="number" step="0.01" placeholder="Nuevo Porcentaje de Cobro" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <button id="cambiarChargePercentage" class="w-full bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Actualizar Porcentaje
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recuperar Planes de Clientes -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Recuperar Planes de Clientes</h2>
+                <div class="space-y-4">
+                    <input id="retrievePageSize" type="number" placeholder="Tamaño de Página" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrieveLastId" type="number" placeholder="Último ID" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrievePlanId" type="number" placeholder="ID del Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrieveDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrieveDocNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <select id="retrieveTypeService" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-500">
+                        <option value="Plan">Plan</option>
+                        <option value="Topping">Topping</option>
+                    </select>
+                    <button id="recuperarPlanes" class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Recuperar Planes
+                    </button>
+                </div>
+                <div id="listaCustomerPlans" class="mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Sección nueva: Gestión de Métodos de Pago -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Obtener Método de Pago -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Obtener Método de Pago</h2>
+                <div class="space-y-4">
+                    <input id="getPaymentDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="getPaymentDocNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <button id="obtenerMetodoPago" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Obtener Método de Pago
+                    </button>
+                </div>
+                <div id="mostrarMetodoPago" class="mt-4"></div>
+            </div>
+
+            <!-- Matricular o Actualizar Método de Pago -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Matricular/Actualizar Método de Pago</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Método de Pago:</label>
+                        <input id="matPaymentClass" type="text" placeholder="Clase (CUENTA_DE_AHORRO, CUENTA_CORRIENTE)" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="matPaymentNumber" type="text" placeholder="Número de Cuenta" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="matPaymentType" type="text" placeholder="Tipo (CUENTAS_DEPOSITOS)" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Cliente:</label>
+                        <input id="matCustomerDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="matCustomerDocNumber" type="text" placeholder="Número de Documento" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <button id="matricularMetodoPago" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Matricular/Actualizar Método de Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección existente: Listar Categorías -->
         <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
             <h2 class="text-xl font-semibold mb-4">Listar Categorías</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -84,6 +225,7 @@
             <div id="listaCategorias" class="mt-4"></div>
         </div>
 
+        <!-- Sección existente: Validar Nombre de Categoría -->
         <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
             <h2 class="text-xl font-semibold mb-4">Validar Nombre de Categoría</h2>
             <div class="flex space-x-4">
@@ -117,7 +259,14 @@
     async function guardarConfiguraciones() {
         const configuraciones = {
             '/api/v1/ch-ms-category-management-pricing/create-category': document.getElementById('estadoCrearCategoria').value,
-            '/api/v1/ch-ms-category-management-pricing/categories': document.getElementById('estadoListarCategorias').value
+            '/api/v1/ch-ms-category-management-pricing/categories': document.getElementById('estadoListarCategorias').value,
+            '/api/v1/ch-ms-relation-management-pricing/customer-plan': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/customer-plan-': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/customer-plan-by-document': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan': 'success',
+            '/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method': document.getElementById('estadoGetPaymentMethod').value,
+            '/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method': document.getElementById('estadoMatriculatePaymentMethod').value
         };
         try {
             const response = await fetch('/api/settings', {
@@ -182,7 +331,7 @@
         const nombreOpcion = document.getElementById('buscarNombreOpcion').value;
         const ordenarPor = document.getElementById('ordenarPor').value;
         try {
-            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/categories?categoryName=${nombreCategoria}&optionName=${nombreOpcion}&sortBy=${ordenarPor}`);
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/categories?categoryName=${encodeURIComponent(nombreCategoria)}&optionName=${encodeURIComponent(nombreOpcion)}&sortBy=${encodeURIComponent(ordenarPor)}`);
             const result = await response.json();
             
             const listaCategorias = document.getElementById('listaCategorias');
@@ -212,7 +361,7 @@
     async function validarNombreCategoria() {
         const nombreCategoria = document.getElementById('validarNombreCategoria').value;
         try {
-            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/validate-category-name?categoryName=${nombreCategoria}`);
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/validate-category-name?categoryName=${encodeURIComponent(nombreCategoria)}`);
             const result = await response.json();
             
             if (result.errors) {
@@ -225,14 +374,285 @@
         }
     }
 
+    async function crearCustomerPlan() {
+        const planId = parseInt(document.getElementById('planId').value);
+        const chargePercentage = parseFloat(document.getElementById('chargePercentage').value);
+        const state = document.getElementById('statePlan').value;
+        const paymentMethod = {
+            number: document.getElementById('paymentNumber').value,
+            type: document.getElementById('paymentType').value,
+            class: document.getElementById('paymentClass').value
+        };
+        const documentType = document.getElementById('documentType').value;
+        const documentNumber = document.getElementById('documentNumber').value;
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-relation-management-pricing/customer-plan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'document-type': documentType,
+                    'document-number': documentNumber
+                },
+                body: JSON.stringify({
+                    planId,
+                    chargePercentage,
+                    state,
+                    paymentMethod
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success('Plan de cliente creado exitosamente');
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function cambiarPlanCliente() {
+        const currentPlanId = parseInt(document.getElementById('currentPlanId').value);
+        const targetPlanId = parseInt(document.getElementById('targetPlanId').value);
+        const paymentMethod = {
+            number: document.getElementById('newPaymentNumber').value,
+            type: document.getElementById('newPaymentType').value,
+            class: document.getElementById('newPaymentClass').value
+        };
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-relation-management-pricing/customer-plan-', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPlanId,
+                    targetPlanId,
+                    paymentMethod
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success('Plan cambiado exitosamente');
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function cambiarChargePercentage() {
+        const documentType = document.getElementById('chgDocType').value;
+        const documentNumber = document.getElementById('chgDocNumber').value;
+        const currentPlanId = parseInt(document.getElementById('chgPlanId').value);
+        const chargePercentage = parseFloat(document.getElementById('newChargePercentage').value);
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    documentType,
+                    documentNumber,
+                    currentPlanId,
+                    chargePercentage
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success(result.meta.message);
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function recuperarPlanes() {
+        const pageSize = document.getElementById('retrievePageSize').value || 10;
+        const lastId = document.getElementById('retrieveLastId').value;
+        const planId = document.getElementById('retrievePlanId').value;
+        const documentType = document.getElementById('retrieveDocType').value;
+        const documentNumber = document.getElementById('retrieveDocNumber').value;
+        const typeService = document.getElementById('retrieveTypeService').value;
+
+        let url = `/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan?pageSize=${encodeURIComponent(pageSize)}&typeService=${encodeURIComponent(typeService)}`;
+        if (lastId) url += `&lastId=${encodeURIComponent(lastId)}`;
+        if (planId) url += `&planId=${encodeURIComponent(planId)}`;
+        if (documentType) url += `&documentType=${encodeURIComponent(documentType)}`;
+        if (documentNumber) url += `&documentNumber=${encodeURIComponent(documentNumber)}`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'message-id': '1234567890',
+                    'session-tracker': 'abcdef123456',
+                    'channel': 'web',
+                    'transaction-code': '98765',
+                    'request-timestamp': new Date().toISOString(),
+                    'company-name': 'MiEmpresa',
+                    'username': 'user123',
+                    'ip': '192.168.1.1'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                if (errorData.errors && errorData.errors.length > 0) {
+                    toastr.error(errorData.errors[0].message);
+                } else {
+                    toastr.error('Error al recuperar los planes');
+                }
+                return;
+            }
+
+            const result = await response.json();
+
+            const listaCustomerPlans = document.getElementById('listaCustomerPlans');
+            listaCustomerPlans.innerHTML = '';
+
+            if (result.data.length === 0) {
+                listaCustomerPlans.innerHTML = '<p>No se encontraron planes.</p>';
+                return;
+            }
+
+            result.data.forEach(plan => {
+                const planDiv = document.createElement('div');
+                planDiv.className = 'bg-gray-100 p-4 mb-4 rounded';
+                planDiv.innerHTML = `
+                    <h3 class="font-bold">Cliente: ${plan.customerInformation.customerName}</h3>
+                    <p class="text-sm text-gray-600">Documento: ${plan.customerInformation.documentType} - ${plan.customerInformation.documentNumber}</p>
+                    <p class="text-sm">Plan: ${plan.service[0].name}</p>
+                    <p class="text-sm">Estado: ${plan.service[0].state}</p>
+                    <p class="text-sm">Porcentaje de Cobro: ${plan.service[0].chargePercentage}</p>
+                `;
+                listaCustomerPlans.appendChild(planDiv);
+            });
+        } catch (error) {
+            console.error('Error en recuperarPlanes:', error);
+            toastr.error('Error al recuperar los planes');
+        }
+    }
+
+    // ------------------ Nuevas Funciones para Métodos de Pago ------------------
+
+    async function obtenerMetodoPago() {
+        const documentType = document.getElementById('getPaymentDocType').value;
+        const documentNumber = document.getElementById('getPaymentDocNumber').value;
+
+        if (!documentType || !documentNumber) {
+            toastr.warning('Por favor, completa ambos campos de documento.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    documentType,
+                    documentNumber
+                })
+            });
+            const result = await response.json();
+
+            const mostrarMetodoPago = document.getElementById('mostrarMetodoPago');
+            mostrarMetodoPago.innerHTML = '';
+
+            if (response.ok) {
+                mostrarMetodoPago.innerHTML = `
+                    <div class="bg-green-100 p-4 rounded">
+                        <p><strong>Número de Cuenta:</strong> ${result.paymentMethod.number}</p>
+                        <p><strong>Clase:</strong> ${result.paymentMethod.methodClass}</p>
+                        <p><strong>Tipo:</strong> ${result.paymentMethod.type}</p>
+                    </div>
+                `;
+                toastr.success(result.meta.message);
+            } else {
+                if (result.errors && result.errors.length > 0) {
+                    toastr.error(result.errors[0].message);
+                } else {
+                    toastr.error('Error al obtener el método de pago.');
+                }
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function matricularMetodoPago() {
+        const methodClass = document.getElementById('matPaymentClass').value;
+        const number = document.getElementById('matPaymentNumber').value;
+        const type = document.getElementById('matPaymentType').value;
+        const documentType = document.getElementById('matCustomerDocType').value;
+        const documentNumber = document.getElementById('matCustomerDocNumber').value;
+
+        if (!methodClass || !number || !type || !documentType || !documentNumber) {
+            toastr.warning('Por favor, completa todos los campos.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    paymentMethod: {
+                        methodClass,
+                        number,
+                        type
+                    },
+                    customer: {
+                        documentType,
+                        documentNumber
+                    }
+                })
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                toastr.success('Método de pago matriculado/actualizado exitosamente.');
+                // Opcional: Limpiar los campos del formulario
+                document.getElementById('matPaymentClass').value = '';
+                document.getElementById('matPaymentNumber').value = '';
+                document.getElementById('matPaymentType').value = '';
+                document.getElementById('matCustomerDocType').value = '';
+                document.getElementById('matCustomerDocNumber').value = '';
+            } else {
+                if (result.errors && result.errors.length > 0) {
+                    toastr.error(result.errors[0].message);
+                } else {
+                    toastr.error('Error al matricular/actualizar el método de pago.');
+                }
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    // ------------------ Fin Nuevas Funciones para Métodos de Pago ------------------
+
     document.getElementById('guardarConfiguraciones').addEventListener('click', guardarConfiguraciones);
     document.getElementById('crearCategoria').addEventListener('click', crearCategoria);
     document.getElementById('buscarCategorias').addEventListener('click', listarCategorias);
     document.getElementById('validarCategoria').addEventListener('click', validarNombreCategoria);
+    document.getElementById('crearCustomerPlan').addEventListener('click', crearCustomerPlan);
+    document.getElementById('cambiarPlanCliente').addEventListener('click', cambiarPlanCliente);
+    document.getElementById('cambiarChargePercentage').addEventListener('click', cambiarChargePercentage);
+    document.getElementById('recuperarPlanes').addEventListener('click', recuperarPlanes);
+    
+    // Nuevos Event Listeners para Métodos de Pago
+    document.getElementById('obtenerMetodoPago').addEventListener('click', obtenerMetodoPago);
+    document.getElementById('matricularMetodoPago').addEventListener('click', matricularMetodoPago);
 
     fetch('/api/settings').then(response => response.json()).then(configuraciones => {
         document.getElementById('estadoCrearCategoria').value = configuraciones['/api/v1/ch-ms-category-management-pricing/create-category'] || 'success';
         document.getElementById('estadoListarCategorias').value = configuraciones['/api/v1/ch-ms-category-management-pricing/categories'] || 'success';
+        document.getElementById('estadoGetPaymentMethod').value = configuraciones['/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method'] || 'success';
+        document.getElementById('estadoMatriculatePaymentMethod').value = configuraciones['/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method'] || 'success';
     });
 
     document.addEventListener('click', function (e) {
@@ -243,10 +663,10 @@
             nuevaOpcion.innerHTML = `
                 <select class="codigoOpcion w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
                     <option value="4100">Transferencia Bancaria</option>
-                    <option value="TX002">Pago Bancaria</option>
+                    <option value="TX002">Pago Bancario</option>
                     <option value="TX003">Consulta de Saldo</option>
                     <option value="TX004">Retiro de Efectivo</option>
-                    <option value="TX005">Depósito Bancaria</option>
+                    <option value="TX005">Depósito Bancario</option>
                     <option value="TX006">Pago de Préstamos</option>
                     <option value="TX007">Consulta de Movimientos</option>
                     <option value="TX008">Recarga de Tarjeta</option>
@@ -259,7 +679,7 @@
             opcionesList.appendChild(nuevaOpcion);
         }
     });
-
     </script>
 </body>
 </html>
+<!-- Fin public/dashboard.html -->

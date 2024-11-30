@@ -5,11 +5,12 @@ const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
 const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const puerto = 3000;
 
-app.use(cors()); 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
@@ -20,323 +21,1181 @@ async function leerDb() {
     const datos = await fs.readFile(rutaDb, 'utf8');
     return JSON.parse(datos);
   } catch (error) {
-    return { categorias: [], configuraciones: {} };
+    console.error('Error leyendo db.json:', error);
+    return { categorias: [], configuraciones: {}, customerPlans: [], paymentMethods: [] };
   }
 }
 
 async function escribirDb(datos) {
-  await fs.writeFile(rutaDb, JSON.stringify(datos, null, 2));
+  try {
+    await fs.writeFile(rutaDb, JSON.stringify(datos, null, 2));
+  } catch (error) {
+    console.error('Error escribiendo db.json:', error);
+  }
 }
 
 async function simularErrores(req, res, next) {
-  const db = await leerDb();
-  const { path } = req;
-  const configuracion = db.configuraciones[path] || 'success';
+  try {
+    const db = await leerDb();
+    const ruta = req.path;
+    const configuracion = db.configuraciones[ruta] || 'success';
 
-  if (configuracion === 'error') {
-    return res.status(500).json({
+    if (configuracion === 'error') {
+      return res.status(500).json({
+        errors: [{
+          type: "Error",
+          code: "504",
+          reason: "Algo salió mal",
+          message: "No fue posible cargar la información. Intenta de nuevo",
+          domain: ruta
+        }]
+      });
+    }
+
+    if (configuracion === 'empty' && ruta === '/api/v1/ch-ms-category-management-pricing/categories') {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTB201",
+          reason: "Lo sentimos",
+          message: "Aun no tienes Categorias. Crea las categorias que deseas administrar.",
+          domain: ruta
+        }]
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error en simularErrores middleware:', error);
+    res.status(500).json({
       errors: [{
         type: "Error",
-        code: "504",
-        reason: "Algo salió mal",
-        message: "No fue posible cargar la información. Intenta de nuevo",
-        domain: path
+        code: "500",
+        reason: "Internal Server Error",
+        message: "Error interno del servidor.",
+        domain: req.path
       }]
     });
   }
-
-  if (configuracion === 'empty' && path === '/api/v1/ch-ms-category-management-pricing/categories') {
-    return res.status(404).json({
-      errors: [{
-        type: "Error",
-        code: "CTB201",
-        reason: "Lo sentimos",
-        message: "Aun no tienes Categorias. Crea las categorias que deseas administrar.",
-        domain: path
-      }]
-    });
-  }
-
-  next();
 }
+
+app.get('/x', async (req, res) => {
+  res.json({ message: 'Hola' });
+});
 
 app.use(simularErrores);
 
-app.post('/api/v1/ch-ms-category-management-pricing/create-category', async (req, res) => {
-  const db = await leerDb();
-  const { name, description, optionList } = req.body.data.attributes.param.create;
-
-  const nuevaCategoria = {
-    categoryId: db.categorias.length + 1,
-    categoryCode: `CAT${String(db.categorias.length + 1).padStart(3, '0')}`,
-    categoryName: name,
-    categoryDescription: description,
-    categoryOptionsCount: optionList.length,
-    categoryAssignedPlan: null,
-    optionsList: optionList.map((opcion, index) => ({
-      optionId: db.categorias.reduce((acc, cat) => acc + cat.optionsList.length, 0) + index + 1,
-      optionCode: opcion.optionCode,
-      optionName: opcion.description
-    }))
-  };
-
-  db.categorias.push(nuevaCategoria);
-  await escribirDb(db);
-
-  res.json({
-    meta: { code: "200", message: "Transacción Exitosa" },
-    transactionRequest: { request: req.body },
-    transactionResponse: {
-      response: {
-        type: "PRICINGCREATECATEGORYRS",
-        id: req.body.data.id,
-        attributes: {
-          timestamp: new Date().toISOString(),
-          appId: "MACD",
-          appModule: "Pricing - Categories",
-          result: nuevaCategoria
-        }
-      }
-    }
-  });
+// Rutas existentes...
+app.get('/x', async (req, res) => {
+  res.json({ message: 'Hola' });
 });
 
-app.get('/api/v1/ch-ms-category-management-pricing/categories', async (req, res) => {
-  const db = await leerDb();
-  const { optionName, categoryName, pageSize = 10, pageNumber = 1, sortBy = 'categoryName' } = req.query;
+// Crear Categoría
+app.post('/api/v1/ch-ms-category-management-pricing/create-category', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const { name, description, optionList } = req.body.data.attributes.param.create;
 
-  const pageSizeInt = parseInt(pageSize);
-  const pageNumberInt = parseInt(pageNumber);
+    const nuevaCategoria = {
+      categoryId: db.categorias.length + 1,
+      categoryCode: `CAT${String(db.categorias.length + 1).padStart(3, '0')}`,
+      categoryName: name,
+      categoryDescription: description,
+      categoryOptionsCount: optionList.length,
+      categoryAssignedPlan: null,
+      optionsList: optionList.map((opcion, index) => ({
+        optionId: db.categorias.reduce((acc, cat) => acc + cat.optionsList.length, 0) + index + 1,
+        optionCode: opcion.optionCode,
+        optionName: opcion.description
+      }))
+    };
 
-  let categoriasFiltradas = db.categorias;
+    db.categorias.push(nuevaCategoria);
+    await escribirDb(db);
 
-  if (categoryName) {
-    categoriasFiltradas = categoriasFiltradas.filter(cat =>
-      cat.categoryName.toLowerCase().includes(categoryName.toLowerCase())
-    );
-  }
-
-  if (optionName) {
-    categoriasFiltradas = categoriasFiltradas.filter(cat =>
-      cat.optionsList.some(opcion =>
-        opcion.optionName.toLowerCase().includes(optionName.toLowerCase())
-      )
-    );
-  }
-
-  const totalRegistros = categoriasFiltradas.length;
-  const indiceInicio = (pageNumberInt - 1) * pageSizeInt;
-  const indiceFin = indiceInicio + pageSizeInt;
-
-  categoriasFiltradas.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
-
-  const categoriasPaginadas = categoriasFiltradas.slice(indiceInicio, indiceFin);
-
-  if (categoriasPaginadas.length === 0) {
-    return res.status(404).json({
+    res.json({
+      meta: { code: "200", message: "Transacción Exitosa" },
+      transactionRequest: { request: req.body },
+      transactionResponse: {
+        response: {
+          type: "PRICINGCREATECATEGORYRS",
+          id: req.body.data.id,
+          attributes: {
+            timestamp: new Date().toISOString(),
+            appId: "MACD",
+            appModule: "Pricing - Categories",
+            result: nuevaCategoria
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en create-category:', error);
+    res.status(500).json({
       errors: [{
         type: "Error",
-        code: "CTB202",
-        reason: "Lo sentimos",
-        message: "Tu búsqueda no obtuvo resultados. Prueba con otra información.",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible crear la categoría.",
+        domain: "/api/v1/ch-ms-category-management-pricing/create-category"
+      }]
+    });
+  }
+});
+
+// Listar Categorías
+app.get('/api/v1/ch-ms-category-management-pricing/categories', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const { optionName, categoryName, pageSize = 10, pageNumber = 1, sortBy = 'categoryName' } = req.query;
+
+    const pageSizeInt = parseInt(pageSize);
+    const pageNumberInt = parseInt(pageNumber);
+
+    let categoriasFiltradas = db.categorias;
+
+    if (categoryName) {
+      categoriasFiltradas = categoriasFiltradas.filter(cat =>
+        cat.categoryName.toLowerCase().includes(categoryName.toLowerCase())
+      );
+    }
+
+    if (optionName) {
+      categoriasFiltradas = categoriasFiltradas.filter(cat =>
+        cat.optionsList.some(opcion =>
+          opcion.optionName.toLowerCase().includes(optionName.toLowerCase())
+        )
+      );
+    }
+
+    const totalRegistros = categoriasFiltradas.length;
+    const indiceInicio = (pageNumberInt - 1) * pageSizeInt;
+    const indiceFin = indiceInicio + pageSizeInt;
+
+    categoriasFiltradas.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
+
+    const categoriasPaginadas = categoriasFiltradas.slice(indiceInicio, indiceFin);
+
+    if (categoriasPaginadas.length === 0) {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTB202",
+          reason: "Lo sentimos",
+          message: "Tu búsqueda no obtuvo resultados. Prueba con otra información.",
+          domain: "/api/v1/ch-ms-category-management-pricing/categories"
+        }]
+      });
+    }
+
+    res.json({
+      meta: { code: "200", message: "Transacción Exitosa" },
+      transactionRequest: { request: req.query },
+      transactionResponse: {
+        response: {
+          type: "PRICINGRETRIEVECATEGORIESRS",
+          id: null,
+          attributes: {
+            timestamp: new Date().toISOString(),
+            appId: "MACD",
+            appModule: "Pricing - Categories",
+            result: {
+              pagination: {
+                sortBy,
+                pageNumber: pageNumberInt,
+                pageSize: pageSizeInt,
+                totalRecords: totalRegistros
+              },
+              categoryList: categoriasPaginadas
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en listar-categorias:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible listar las categorías.",
         domain: "/api/v1/ch-ms-category-management-pricing/categories"
       }]
     });
   }
+});
 
-  res.json({
-    meta: { code: "200", message: "Transacción Exitosa" },
-    transactionRequest: { request: req.query },
-    transactionResponse: {
-      response: {
-        type: "PRICINGRETRIEVECATEGORIESRS",
-        id: null,
-        attributes: {
-          timestamp: new Date().toISOString(),
-          appId: "MACD",
-          appModule: "Pricing - Categories",
-          result: {
-            pagination: {
-              sortBy,
-              pageNumber: pageNumberInt,
-              pageSize: pageSizeInt,
-              totalRecords: totalRegistros
-            },
-            categoryList: categoriasPaginadas
+// Validar Nombre de Categoría
+app.get('/api/v1/ch-ms-category-management-pricing/validate-category-name', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const { categoryName } = req.query;
+
+    const existe = db.categorias.some(cat =>
+      cat.categoryName.toLowerCase() === categoryName.toLowerCase()
+    );
+
+    if (existe) {
+      return res.status(400).json({
+        errors: [{
+          type: "Error",
+          code: "CTB203",
+          reason: "Lo sentimos",
+          message: "El nombre de la categoría ya se encuentra en uso. Elige otro.",
+          domain: "/api/v1/ch-ms-category-management-pricing/validate-category-name"
+        }]
+      });
+    }
+
+    res.json({
+      meta: { code: "200", message: "Transacción Exitosa" },
+      transactionRequest: { request: { categoryName } },
+      transactionResponse: {
+        response: {
+          type: "PRICINGVALIDATECATEGORYNAMERS",
+          id: null,
+          attributes: {
+            timestamp: new Date().toISOString(),
+            appId: "MACD",
+            appModule: "Pricing - Categories",
+            result: {
+              valid: true,
+              description: "Nombre de categoría disponible"
+            }
           }
         }
       }
-    }
-  });
-});
-
-app.get('/api/v1/ch-ms-category-management-pricing/validate-category-name', async (req, res) => {
-  const db = await leerDb();
-  const { categoryName } = req.query;
-
-  const existe = db.categorias.some(cat =>
-    cat.categoryName.toLowerCase() === categoryName.toLowerCase()
-  );
-
-  if (existe) {
-    return res.status(400).json({
+    });
+  } catch (error) {
+    console.error('Error en validate-category-name:', error);
+    res.status(500).json({
       errors: [{
         type: "Error",
-        code: "CTB203",
-        reason: "Lo sentimos",
-        message: "El nombre de la categoría ya se encuentra en uso. Elige otro.",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible validar el nombre de la categoría.",
         domain: "/api/v1/ch-ms-category-management-pricing/validate-category-name"
       }]
     });
   }
-
-  res.json({
-    meta: { code: "200", message: "Transacción Exitosa" },
-    transactionRequest: { request: { categoryName } },
-    transactionResponse: {
-      response: {
-        type: "PRICINGVALIDATECATEGORYNAMERS",
-        id: null,
-        attributes: {
-          timestamp: new Date().toISOString(),
-          appId: "MACD",
-          appModule: "Pricing - Categories",
-          result: {
-            valid: true,
-            description: "Nombre de categoría disponible"
-          }
-        }
-      }
-    }
-  });
 });
 
+// Obtener Opciones
 app.get('/api/v1/ch-ms-category-management-pricing/options', async (req, res) => {
-  const db = await leerDb();
-  const { channel } = req.query;
+  try {
+    const db = await leerDb();
+    const { channel } = req.query;
 
-  const opciones = [
-    // Aquí puedes agregar las opciones desde la base de datos o de una fuente de datos estática
-    {
-      id: 0,
-      optionCode: "3105",
-      state: "Active",
-      active: true,
-      description: "Actualizacion de solicitudes de aprobaciones de convenios Libranzas",
-      inUse: false
-    },
-    {
-      id: 0,
-      optionCode: "0705",
-      state: "Active",
-      active: true,
-      description: "Administrar productos de terceros",
-      inUse: false
-    },
-    {
-      id: 0,
-      optionCode: "6100",
-      state: "Active",
-      active: true,
-      description: "Autenticación ANF",
-      inUse: false
-    },
-    {
-      id: 0,
-      optionCode: "385",
-      state: "Active",
-      active: true,
-      description: "Autenticación transitoria Sucurtal Virtual Negocios",
-      inUse: false
-    },
-    {
-      id: 0,
-      optionCode: "359",
-      state: "Active",
-      active: true,
-      description: "Balances SVN",
-      inUse: false
-    },
-    {
-      id: 0,
-      optionCode: "6122",
-      state: "Active",
-      active: true,
-      description: "Cargar archivos de instruccion y soportes",
-      inUse: false
-    },
-    {
-      id: 0,
-      optionCode: "8005",
-      state: "Active",
-      active: true,
-      description: "Consulta Estado Registro",
-      inUse: false
-    },
-    {
-      id: 0,
-      optionCode: "0327",
-      state: "Active",
-      active: true,
-      description: "Consulta Listado Inversion Virtual",
-      inUse: false
-    },
-    {
-      id: 13,
-      optionCode: "4112",
-      state: "Active",
-      active: true,
-      description: "Consulta cuentas y saldos cliente de leasing",
-      inUse: true
-    },
-    {
-      id: 0,
-      optionCode: "3100",
-      state: "Active",
-      active: true,
-      description: "Consulta de Convenios por NIT",
-      inUse: false
-    }
-  ];
+    const opciones = [
+      {
+        id: 0,
+        optionCode: "3105",
+        state: "Active",
+        active: true,
+        description: "Actualizacion de solicitudes de aprobaciones de convenios Libranzas",
+        inUse: false
+      },
+      {
+        id: 0,
+        optionCode: "0705",
+        state: "Active",
+        active: true,
+        description: "Administrar productos de terceros",
+        inUse: false
+      },
+      {
+        id: 0,
+        optionCode: "6100",
+        state: "Active",
+        active: true,
+        description: "Autenticación ANF",
+        inUse: false
+      },
+      {
+        id: 0,
+        optionCode: "385",
+        state: "Active",
+        active: true,
+        description: "Autenticación transitoria Sucurtal Virtual Negocios",
+        inUse: false
+      },
+      {
+        id: 0,
+        optionCode: "359",
+        state: "Active",
+        active: true,
+        description: "Balances SVN",
+        inUse: false
+      },
+      {
+        id: 0,
+        optionCode: "6122",
+        state: "Active",
+        active: true,
+        description: "Cargar archivos de instruccion y soportes",
+        inUse: false
+      },
+      {
+        id: 0,
+        optionCode: "8005",
+        state: "Active",
+        active: true,
+        description: "Consulta Estado Registro",
+        inUse: false
+      },
+      {
+        id: 0,
+        optionCode: "0327",
+        state: "Active",
+        active: true,
+        description: "Consulta Listado Inversion Virtual",
+        inUse: false
+      },
+      {
+        id: 13,
+        optionCode: "4112",
+        state: "Active",
+        active: true,
+        description: "Consulta cuentas y saldos cliente de leasing",
+        inUse: true
+      },
+      {
+        id: 0,
+        optionCode: "3100",
+        state: "Active",
+        active: true,
+        description: "Consulta de Convenios por NIT",
+        inUse: false
+      }
+    ];
 
-  res.json({
-    meta: { code: "200", message: "Transacción Exitosa" },
-    transactionRequest: { request: { channel } },
-    transactionResponse: {
-      response: {
-        type: "PRICINGRETRIEVEOPTIONSRS",
-        id: null,
-        attributes: {
-          timestamp: new Date().toISOString(),
-          appId: "MACD",
-          appModule: "Pricing - Options",
-          result: {
-            optionList: opciones
+    res.json({
+      meta: { code: "200", message: "Transacción Exitosa" },
+      transactionRequest: { request: { channel } },
+      transactionResponse: {
+        response: {
+          type: "PRICINGRETRIEVEOPTIONSRS",
+          id: null,
+          attributes: {
+            timestamp: new Date().toISOString(),
+            appId: "MACD",
+            appModule: "Pricing - Options",
+            result: {
+              optionList: opciones
+            }
           }
         }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('Error en options:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible obtener las opciones.",
+        domain: "/api/v1/ch-ms-category-management-pricing/options"
+      }]
+    });
+  }
 });
 
+// Ruta del Dashboard
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
+// Obtener Configuraciones
 app.get('/api/settings', async (req, res) => {
-  const db = await leerDb();
-  res.json(db.configuraciones);
+  try {
+    const db = await leerDb();
+    res.json(db.configuraciones);
+  } catch (error) {
+    console.error('Error en get /api/settings:', error);
+    res.status(500).json({ message: 'Error al obtener configuraciones' });
+  }
 });
 
+// Actualizar Configuraciones
 app.post('/api/settings', async (req, res) => {
-  const db = await leerDb();
-  db.configuraciones = req.body;
-  await escribirDb(db);
-  res.json({ message: 'Configuraciones actualizadas exitosamente' });
+  try {
+    const db = await leerDb();
+    db.configuraciones = req.body;
+    await escribirDb(db);
+    res.json({ message: 'Configuraciones actualizadas exitosamente' });
+  } catch (error) {
+    console.error('Error en post /api/settings:', error);
+    res.status(500).json({ message: 'Error al actualizar configuraciones' });
+  }
 });
-app.use(cors({
-  origin: 'http://localhost:4200' // Habilitar CORS para tu aplicación Angular
-}));
+
+// Nuevas Rutas según Swagger
+
+// Crear un nuevo plan para un cliente
+app.post('/api/v1/ch-ms-relation-management-pricing/customer-plan', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const {
+      planId,
+      chargePercentage,
+      state,
+      paymentMethod
+    } = req.body;
+
+    const newPlan = {
+      planId,
+      chargePercentage,
+      state,
+      paymentMethod,
+      documentType: req.headers['document-type'],
+      documentNumber: req.headers['document-number'],
+      purchaseDate: new Date().toISOString().split('T')[0],
+      activationDate: new Date().toISOString().split('T')[0]
+    };
+
+    db.customerPlans.push(newPlan);
+    await escribirDb(db);
+
+    res.json({
+      planId: newPlan.planId,
+      documentType: newPlan.documentType,
+      documentNumber: newPlan.documentNumber,
+      purchaseDate: newPlan.purchaseDate,
+      activationDate: newPlan.activationDate,
+      chargePercentage: newPlan.chargePercentage,
+      state: newPlan.state
+    });
+  } catch (error) {
+    console.error('Error en crear customer-plan:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible crear el plan de cliente.",
+        domain: "/api/v1/ch-ms-relation-management-pricing/customer-plan"
+      }]
+    });
+  }
+});
+
+// Cambiar el plan de un cliente
+app.put('/api/v1/ch-ms-relation-management-pricing/customer-plan-', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const { currentPlanId, targetPlanId, paymentMethod } = req.body;
+
+    const currentPlan = db.customerPlans.find(plan =>
+      plan.planId === currentPlanId &&
+      plan.documentType === req.headers['document-type'] &&
+      plan.documentNumber === req.headers['document-number']
+    );
+
+    if (!currentPlan) {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTB301",
+          reason: "No encontrado",
+          message: "Plan actual no encontrado.",
+          domain: "/api/v1/ch-ms-relation-management-pricing/customer-plan-"
+        }]
+      });
+    }
+
+    currentPlan.planId = targetPlanId;
+    currentPlan.paymentMethod = paymentMethod;
+
+    await escribirDb(db);
+
+    res.json({
+      targetPlanId: targetPlanId,
+      targetPlanName: `Plan ${targetPlanId}`,
+      activationDate: new Date().toISOString().split('T')[0],
+      transactionId: uuidv4()
+    });
+  } catch (error) {
+    console.error('Error en cambiar customer-plan:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible cambiar el plan de cliente.",
+        domain: "/api/v1/ch-ms-relation-management-pricing/customer-plan-"
+      }]
+    });
+  }
+});
+
+// Cambiar el porcentaje de cobro del plan de un cliente existente
+app.post('/api/v1/ch-ms-relation-management-pricing/customer-plan-by-document', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const { pagination, filter } = req.body;
+
+    const { serviceType, planId, state } = filter;
+
+    const plan = db.customerPlans.find(p =>
+      p.planId === planId &&
+      p.state.toLowerCase() === state.toLowerCase() &&
+      p.documentType // Agregar más filtros si es necesario
+    );
+
+    if (!plan) {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTB304",
+          reason: "No encontrado",
+          message: "Plan del cliente no encontrado.",
+          domain: "/api/v1/ch-ms-relation-management-pricing/customer-plan-by-document"
+        }]
+      });
+    }
+
+    // Actualizar chargePercentage o realizar la acción requerida
+    // Aquí asumimos que se cambia el chargePercentage
+    plan.chargePercentage += 0.05; // Ejemplo de cambio
+
+    await escribirDb(db);
+
+    res.json({
+      meta: { code: "200", message: "Porcentaje de cobro actualizado con éxito" },
+      data: plan
+    });
+  } catch (error) {
+    console.error('Error en customer-plan-by-document:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible actualizar el porcentaje de cobro.",
+        domain: "/api/v1/ch-ms-relation-management-pricing/customer-plan-by-document"
+      }]
+    });
+  }
+});
+
+// Cambiar el porcentaje de cobro del plan de un cliente existente
+app.patch('/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const { documentType, documentNumber, currentPlanId, chargePercentage } = req.body;
+
+    const plan = db.customerPlans.find(p =>
+      p.documentType === documentType &&
+      p.documentNumber === documentNumber &&
+      p.planId === currentPlanId
+    );
+
+    if (!plan) {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTB302",
+          reason: "No encontrado",
+          message: "Plan del cliente no encontrado.",
+          domain: "/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage"
+        }]
+      });
+    }
+
+    const previousChargePercent = plan.chargePercentage;
+    plan.chargePercentage = chargePercentage;
+
+    await escribirDb(db);
+
+    res.json({
+      meta: {
+        code: "200",
+        message: "Porcentaje de cobro actualizado con éxito"
+      },
+      data: {
+        previousChargePercent: `${previousChargePercent * 100}%`,
+        currentChargePercent: `${chargePercentage * 100}%`
+      }
+    });
+  } catch (error) {
+    console.error('Error en charge-percentage:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible actualizar el porcentaje de cobro.",
+        domain: "/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage"
+      }]
+    });
+  }
+});
+
+// Obtener todos los planes de los clientes
+app.get('/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan', async (req, res) => {
+  try {
+    console.log('Ruta /retrieve-customer-plan accedida');
+    const db = await leerDb();
+    const {
+      pageSize = 10,
+      lastId,
+      planId,
+      documentType,
+      documentNumber,
+      typeService
+    } = req.query;
+
+    let filteredPlans = db.customerPlans;
+
+    if (planId) {
+      filteredPlans = filteredPlans.filter(plan => plan.planId === parseInt(planId));
+    }
+
+    if (documentType) {
+      filteredPlans = filteredPlans.filter(plan => plan.documentType === documentType);
+    }
+
+    if (documentNumber) {
+      filteredPlans = filteredPlans.filter(plan => plan.documentNumber === documentNumber);
+    }
+
+    if (typeService) {
+      // Asumiendo que typeService filtra por algún atributo relacionado
+      // Ajustar según estructura real
+      // Ejemplo:
+      // filteredPlans = filteredPlans.filter(plan => plan.serviceType === typeService);
+      // Dado que no tienes 'serviceType', este filtro no hace nada
+    }
+
+    const totalRecords = filteredPlans.length;
+    const pageSizeInt = parseInt(pageSize);
+    const totalPages = Math.ceil(totalRecords / pageSizeInt);
+    const currentPage = lastId ? Math.floor(filteredPlans.findIndex(plan => plan.planId === parseInt(lastId)) / pageSizeInt) + 1 : 1;
+
+    const paginatedPlans = filteredPlans.slice((currentPage - 1) * pageSizeInt, currentPage * pageSizeInt);
+
+    res.json({
+      meta: {
+        code: "200",
+        message: "Operación exitosa"
+      },
+      pagination: {
+        lastIndex: paginatedPlans.length > 0 ? paginatedPlans[paginatedPlans.length - 1].planId.toString() : "0",
+        pageSize: pageSizeInt,
+        totalPages: totalPages,
+        totalRecords: totalRecords
+      },
+      data: paginatedPlans.map(plan => ({
+        customerInformation: {
+          documentType: plan.documentType,
+          documentNumber: plan.documentNumber,
+          customerName: "Nombre del Cliente" // Placeholder
+        },
+        service: [{
+          id: plan.planId,
+          idType: 1,
+          type: "Plan",
+          name: `Plan ${plan.planId}`,
+          purchaseDate: plan.purchaseDate,
+          activationDate: plan.activationDate,
+          minimumStay: 30,
+          chargePercentage: plan.chargePercentage,
+          fee: 100.50, // Placeholder
+          state: plan.state
+        }]
+      }))
+    });
+  } catch (error) {
+    console.error('Error en retrieve-customer-plan:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible recuperar los planes de clientes.",
+        domain: "/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan"
+      }]
+    });
+  }
+});
+
+// ------------------ Nuevos Endpoints para Métodos de Pago ------------------
+
+// Obtener Método de Pago de un Usuario
+app.post('/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method', async (req, res) => {
+  try {
+    const { documentType, documentNumber } = req.body;
+
+    if (!documentType || !documentNumber) {
+      return res.status(400).json({
+        errors: [{
+          type: "Error",
+          code: "CTB001",
+          reason: "Solicitud Incorrecta",
+          message: "Faltan datos requeridos: documentType y documentNumber.",
+          domain: "/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method"
+        }]
+      });
+    }
+
+    const db = await leerDb();
+    const paymentEntry = db.paymentMethods.find(pm =>
+      pm.documentType === documentType &&
+      pm.documentNumber === documentNumber
+    );
+
+    if (!paymentEntry) {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTB007",
+          reason: "No encontrado",
+          message: "El usuario no tiene un método de pago registrado.",
+          domain: "/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method"
+        }]
+      });
+    }
+
+    res.json({
+      meta: {
+        code: "200",
+        message: "Se ha obtenido el método de pago correctamente."
+      },
+      paymentMethod: {
+        number: paymentEntry.paymentMethod.number,
+        methodClass: paymentEntry.paymentMethod.methodClass,
+        type: paymentEntry.paymentMethod.type
+      }
+    });
+  } catch (error) {
+    console.error('Error en get-payment-method:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible obtener el método de pago.",
+        domain: "/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method"
+      }]
+    });
+  }
+});
+
+// Matricular o Actualizar Método de Pago de un Usuario
+app.post('/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method', async (req, res) => {
+  try {
+    const { paymentMethod, customer } = req.body;
+
+    if (!paymentMethod || !customer || !customer.documentType || !customer.documentNumber) {
+      return res.status(400).json({
+        errors: [{
+          type: "Error",
+          code: "CTB001",
+          reason: "Solicitud Incorrecta",
+          message: "Faltan datos requeridos en paymentMethod o customer.",
+          domain: "/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method"
+        }]
+      });
+    }
+
+    const { methodClass, number, type } = paymentMethod;
+    const { documentType, documentNumber } = customer;
+
+    // Validar methodClass
+    const validMethodClasses = ["CUENTA_DE_AHORRO", "CUENTA_CORRIENTE"];
+    if (!validMethodClasses.includes(methodClass)) {
+      return res.status(400).json({
+        errors: [{
+          type: "Error",
+          code: "CTB008",
+          reason: "Validación Fallida",
+          message: "La cuenta especificada no cumple los requisitos para ser marcada como cuenta de cobro.",
+          domain: "/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method"
+        }]
+      });
+    }
+
+    const db = await leerDb();
+    const paymentEntryIndex = db.paymentMethods.findIndex(pm =>
+      pm.documentType === documentType &&
+      pm.documentNumber === documentNumber
+    );
+
+    if (paymentEntryIndex !== -1) {
+      // Verificar si el usuario es titular de la cuenta
+      const existingPaymentMethod = db.paymentMethods[paymentEntryIndex].paymentMethod;
+      if (existingPaymentMethod.number !== number) {
+        return res.status(400).json({
+          errors: [{
+            type: "Error",
+            code: "CTB007",
+            reason: "Lo sentimos",
+            message: "El usuario no es titular de la cuenta especificada.",
+            domain: "/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method"
+          }]
+        });
+      }
+
+      // Actualizar método de pago
+      db.paymentMethods[paymentEntryIndex].paymentMethod = {
+        methodClass,
+        number,
+        type
+      };
+
+      await escribirDb(db);
+
+      res.json({
+        matriculationSuccess: true
+      });
+    } else {
+      // Matricular nuevo método de pago
+      db.paymentMethods.push({
+        documentType,
+        documentNumber,
+        paymentMethod: {
+          methodClass,
+          number,
+          type
+        }
+      });
+
+      await escribirDb(db);
+
+      res.json({
+        matriculationSuccess: true
+      });
+    }
+  } catch (error) {
+    console.error('Error en matriculate-payment-method:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible matricular o actualizar el método de pago.",
+        domain: "/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method"
+      }]
+    });
+  }
+});
+
+// ------------------ Fin Nuevos Endpoints para Métodos de Pago ------------------
+
+// ------------------ Nuevas Rutas desde Mockoon ------------------
+
+// Listar Planes
+app.post('/api/v1/ch-ms-service-management-pricing/list-plans', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const configuracion = db.configuraciones['/api/v1/ch-ms-service-management-pricing/list-plans'] || 'success';
+
+    if (configuracion === 'error') {
+      return res.status(409).json({
+        errors: [{
+          type: "Error",
+          code: "CTT409",
+          reason: "Algo salió mal",
+          message: "No fue posible cargar la información. Intenta de nuevo.",
+          domain: "/api/v1/ch-ms-service-management-pricing/list-plans"
+        }]
+      });
+    }
+
+    if (configuracion === 'empty') {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTT404",
+          reason: "Lo sentimos",
+          message: "Aun no tienes Plan/Topping. Crea los Planes/Toppings que deseas administrar.",
+          domain: "/api/v1/ch-ms-service-management-pricing/list-plans"
+        }]
+      });
+    }
+
+    // Obtener los filtros de la solicitud
+    const { data } = req.body;
+    console.log('Data:', data);
+    const filters = data.attributes.param.retrieve.filter || {};
+    let planes = db.services;
+
+    // Aplicar filtros
+    if (filters.serviceName) {
+      planes = planes.filter(plan =>
+        plan.serviceName.toLowerCase().includes(filters.serviceName.toLowerCase())
+      );
+    }
+
+    if (filters.serviceType) {
+      planes = planes.filter(plan =>
+        plan.serviceTypeName.toLowerCase() === filters.serviceType.toLowerCase()
+      );
+    }
+
+    if (filters.creationDate) {
+      planes = planes.filter(plan =>
+        plan.creationDate === filters.creationDate
+      );
+    }
+
+    if (planes.length === 0) {
+      return res.status(404).json({
+        errors: [{
+          type: "Error",
+          code: "CTT404",
+          reason: "Lo sentimos",
+          message: "Tu búsqueda no obtuvo resultados. Prueba con otra información.",
+          domain: "/api/v1/ch-ms-service-management-pricing/list-plans"
+        }]
+      });
+    }
+
+    res.json({
+      data: {
+        type: "RETRIEVESERVICERS",
+        id: "list-plan-message",
+        attributes: {
+          companyName: "Company-Name",
+          companyId: "1",
+          docType: "NIT",
+          timestamp: new Date().toISOString(),
+          userId: null,
+          ip: "",
+          appId: "1",
+          appModule: "pricing",
+          data: {
+            retrieve: planes
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en list-plans:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible obtener la lista de planes.",
+        domain: "/api/v1/ch-ms-service-management-pricing/list-plans"
+      }]
+    });
+  }
+});
+
+// Obtener Categorías
+app.get('/api/v1/ch-ms-service-management-pricing/retrieve-categories', async (req, res) => {
+  try {
+    const db = await leerDb();
+    res.json({
+      data: {
+        type: "RETRIEVECATEGORYRS",
+        id: "list-categories-message",
+        attributes: {
+          companyName: "companyName",
+          companyId: "1",
+          docType: "NIT",
+          timestamp: new Date().toISOString(),
+          userId: "user123",
+          ip: "10.10.40",
+          appId: "1",
+          appModule: "pricing",
+          data: {
+            retrieve: db.categorias.map(cat => ({
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryCode,
+              categoryDescription: cat.categoryDescription,
+              categoryNamePublic: cat.categoryName
+            }))
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en retrieve-categories:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible obtener las categorías.",
+        domain: "/api/v1/ch-ms-service-management-pricing/retrieve-categories"
+      }]
+    });
+  }
+});
+
+// Actualizar Plan
+app.get('/api/v1/ch-ms-service-management-pricing/update-plan', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const configuracion = db.configuraciones['/api/v1/ch-ms-service-management-pricing/update-plan'] || 'success';
+
+    if (configuracion === 'error') {
+      return res.status(409).json({
+        errors: [{
+          type: "Error",
+          code: "CTT409",
+          reason: "Algo salió mal",
+          message: "No fue posible cargar la información. Intenta de nuevo.",
+          domain: "/api/v1/ch-ms-service-management-pricing/update-plan"
+        }]
+      });
+    }
+
+    // Aquí puedes actualizar el plan en db.json según sea necesario
+
+    res.json({
+      data: {
+        type: "UPDATESERVICERS",
+        id: "update-service",
+        attributes: {
+          companyName: "companyName",
+          companyId: "1",
+          docType: "NIT",
+          timestamp: new Date().toISOString(),
+          userId: "user123",
+          ip: "10.10.40",
+          appId: "1",
+          appModule: "pricing",
+          data: {
+            update: {
+              // Datos del plan actualizado
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en update-plan:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible actualizar el plan.",
+        domain: "/api/v1/ch-ms-service-management-pricing/update-plan"
+      }]
+    });
+  }
+});
+
+// Validar Nombre de Servicio
+app.get('/api/v1/ch-ms-service-management-pricing/validate-service-name', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const { 'service-name': serviceName } = req.query;
+
+    const existe = db.customerPlans.some(plan =>
+      plan.planName && plan.planName.toLowerCase() === serviceName.toLowerCase()
+    );
+
+    if (existe) {
+      return res.status(409).json({
+        errors: [{
+          type: "Error",
+          code: "CTB403",
+          reason: "Lo sentimos",
+          message: "El nombre del Plan/Topping ya se encuentra en uso. Elige otro.",
+          domain: "/api/v1/ch-ms-service-management-pricing/validate-service-name"
+        }]
+      });
+    }
+
+    res.json({
+      response: {
+        type: "VALIDATESERVICENAMERS",
+        id: "validate-service-name-message",
+        attributes: {
+          companyName: "companyName",
+          companyId: "1",
+          docType: "NIT",
+          timestamp: new Date().toISOString(),
+          userId: "user123",
+          ip: "10.10.40",
+          appId: "1",
+          appModule: "pricing",
+          data: {
+            validateServiceName: "Service name is available"
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en validate-service-name:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible validar el nombre del servicio.",
+        domain: "/api/v1/ch-ms-service-management-pricing/validate-service-name"
+      }]
+    });
+  }
+});
+
+// Crear Servicio
+app.post('/api/v1/ch-ms-service-management-pricing/create-service', async (req, res) => {
+  try {
+    const db = await leerDb();
+    const configuracion = db.configuraciones['/api/v1/ch-ms-service-management-pricing/create-service'] || 'success';
+
+    if (configuracion === 'error') {
+      return res.status(409).json({
+        errors: [{
+          type: "Error",
+          code: "CTT409",
+          reason: "Lo sentimos",
+          message: "No es posible continuar con la transacción en este momento. Por favor intente nuevamente o contáctenos por alguno de nuestros canales de atención.",
+          domain: "/api/v1/ch-ms-service-management-pricing/create-service"
+        }]
+      });
+    }
+
+    // Aquí puedes agregar el nuevo servicio a db.json
+
+    res.json({
+      data: {
+        type: "CREATESERVICERS",
+        id: "save-service",
+        attributes: {
+          companyName: "companyName",
+          companyId: "1",
+          docType: "NIT",
+          timestamp: new Date().toISOString(),
+          userId: "user123",
+          ip: "10.10.40",
+          appId: "1",
+          appModule: "pricing",
+          data: {
+            create: {
+              // Datos del servicio creado
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en create-service:', error);
+    res.status(500).json({
+      errors: [{
+        type: "Error",
+        code: "500",
+        reason: "Internal Server Error",
+        message: "No fue posible crear el servicio.",
+        domain: "/api/v1/ch-ms-service-management-pricing/create-service"
+      }]
+    });
+  }
+});
+
+// ------------------ Fin Nuevas Rutas desde Mockoon ------------------
+
+// Iniciar el Servidor
 app.listen(puerto, () => {
   console.log(`Servidor corriendo en http://localhost:${puerto}`);
 });
@@ -608,8 +1467,199 @@ app.listen(puerto, () => {
   ],
   "configuraciones": {
     "/api/v1/ch-ms-category-management-pricing/create-category": "success",
-    "/api/v1/ch-ms-category-management-pricing/categories": "success"
-  }
+    "/api/v1/ch-ms-category-management-pricing/categories": "success",
+    "/api/v1/ch-ms-relation-management-pricing/customer-plan": "success",
+    "/api/v1/ch-ms-relation-management-pricing/customer-plan-": "success",
+    "/api/v1/ch-ms-relation-management-pricing/customer-plan-by-document": "success",
+    "/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage": "success",
+    "/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan": "success",
+    "/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method": "success",
+    "/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method": "success",
+    "/api/v1/ch-ms-service-management-pricing/list-plans": "success",
+    "/api/v1/ch-ms-service-management-pricing/create-service": "success"
+  },
+  "customerPlans": [
+    {
+      "planId": 1001,
+      "chargePercentage": 0.15,
+      "state": "Pendiente",
+      "paymentMethod": {
+        "number": "009-703421-68",
+        "type": "Deposits",
+        "class": "SVGS"
+      },
+      "documentType": "NIT",
+      "documentNumber": "12345678",
+      "purchaseDate": "2023-01-01",
+      "activationDate": "2023-01-01"
+    },
+    {
+      "planId": 1002,
+      "chargePercentage": 0.2,
+      "state": "Activo",
+      "paymentMethod": {
+        "number": "010-123456-78",
+        "type": "Transfers",
+        "class": "SVGS"
+      },
+      "documentType": "CC",
+      "documentNumber": "87654321",
+      "purchaseDate": "2023-02-15",
+      "activationDate": "2023-02-20"
+    },
+    {
+      "planId": 2,
+      "chargePercentage": 0.52,
+      "state": "Activo",
+      "paymentMethod": {
+        "number": "plata",
+        "type": "plata",
+        "class": "plata"
+      },
+      "documentType": "plata",
+      "documentNumber": "123",
+      "purchaseDate": "2024-11-06",
+      "activationDate": "2024-11-06"
+    },
+    {
+      "planId": 2,
+      "chargePercentage": 0.52,
+      "state": "Activo",
+      "paymentMethod": {
+        "number": "plata",
+        "type": "plata",
+        "class": "plata"
+      },
+      "documentType": "plata",
+      "documentNumber": "123",
+      "purchaseDate": "2024-11-06",
+      "activationDate": "2024-11-06"
+    }
+  ],
+  "paymentMethods": [
+    {
+      "documentType": "NIT",
+      "documentNumber": "100000001",
+      "paymentMethod": {
+        "number": "0000000037901020",
+        "methodClass": "CUENTA_DE_AHORRO",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    }
+  ],
+  "services": [
+    {
+      "serviceId": 1,
+      "serviceTypeName": "Plan",
+      "serviceName": "Plan Básico",
+      "serviceDescription": "Este es el plan básico.",
+      "rateValue": 50.00,
+      "creationDate": "2023-01-01",
+      "gracePeriod": null,
+      "minimiunStay": 12,
+      "stateService": true,
+      "orderOffering": 1,
+      "color": "Azul",
+      "level": 1,
+      "icon": "transfer_icon",
+      "environmentName": "SVE",
+      "environmentState": "Activo",
+      "categories": [
+        {
+          "categoryId": 1,
+          "categoryName": "CAT001",
+          "categoryDescription": "Servicios básicos y esenciales",
+          "categoryNamePublic": "Categoría Básica"
+        }
+      ],
+      "attributes": [
+        {
+          "attributeId": 1,
+          "attributeName": "Número de usuarios",
+          "attributeDescripcion": "Número de usuarios permitidos en el plan",
+          "attributeState": true,
+          "serviceAttributeState": true,
+          "value": "10",
+          "rateBehavior": null,
+          "typeCampForm": "Número"
+        }
+      ]
+    },
+    {
+      "serviceId": 2,
+      "serviceTypeName": "Plan",
+      "serviceName": "Plan Premium",
+      "serviceDescription": "Este es el plan premium.",
+      "rateValue": 100.00,
+      "creationDate": "2023-02-01",
+      "gracePeriod": null,
+      "minimiunStay": 12,
+      "stateService": true,
+      "orderOffering": 2,
+      "color": "Dorado",
+      "level": 2,
+      "icon": "premium_icon",
+      "environmentName": "SVE",
+      "environmentState": "Activo",
+      "categories": [
+        {
+          "categoryId": 2,
+          "categoryName": "CAT002",
+          "categoryDescription": "Servicios avanzados",
+          "categoryNamePublic": "Categoría Avanzada"
+        }
+      ],
+      "attributes": [
+        {
+          "attributeId": 2,
+          "attributeName": "Número de usuarios",
+          "attributeDescripcion": "Número de usuarios permitidos en el plan",
+          "attributeState": true,
+          "serviceAttributeState": true,
+          "value": "50",
+          "rateBehavior": null,
+          "typeCampForm": "Número"
+        }
+      ]
+    },
+    {
+      "serviceId": 3,
+      "serviceTypeName": "Topping",
+      "serviceName": "Topping Extra",
+      "serviceDescription": "Este es un topping extra.",
+      "rateValue": 25.00,
+      "creationDate": "2023-03-01",
+      "gracePeriod": null,
+      "minimiunStay": 6,
+      "stateService": true,
+      "orderOffering": 3,
+      "color": "Verde",
+      "level": 1,
+      "icon": "topping_icon",
+      "environmentName": "NEG",
+      "environmentState": "Activo",
+      "categories": [
+        {
+          "categoryId": 1,
+          "categoryName": "CAT001",
+          "categoryDescription": "Servicios básicos y esenciales",
+          "categoryNamePublic": "Categoría Básica"
+        }
+      ],
+      "attributes": [
+        {
+          "attributeId": 3,
+          "attributeName": "Característica especial",
+          "attributeDescripcion": "Descripción de la característica especial",
+          "attributeState": true,
+          "serviceAttributeState": true,
+          "value": "Incluye soporte 24/7",
+          "rateBehavior": null,
+          "typeCampForm": "Texto"
+        }
+      ]
+    }
+  ]
 }
 /* Fin db.json */
 
@@ -649,6 +1699,7 @@ app.listen(puerto, () => {
 /* Fin package.json */
 
 /* Inicio public\dashboard.html */
+<!-- Inicio public/dashboard.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -665,8 +1716,9 @@ app.listen(puerto, () => {
         <h1 class="text-3xl font-bold mb-8 text-center text-blue-600">Panel de Control API de Pricing</h1>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Configuraciones existentes -->
             <div class="bg-white shadow-md rounded px-6 py-4">
-                <h2 class="text-xl font-semibold mb-4">Configuraciones</h2>
+                <h2 class="text-xl font-semibold mb-4">Configuraciones Generales</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700" for="estadoCrearCategoria">Crear Categoría:</label>
@@ -683,12 +1735,30 @@ app.listen(puerto, () => {
                             <option value="empty">Vacío</option>
                         </select>
                     </div>
+                    <!-- Nuevas configuraciones para Métodos de Pago -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoGetPaymentMethod">Obtener Método de Pago:</label>
+                        <select id="estadoGetPaymentMethod" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="CTB007">Error CTB007</option>
+                            <option value="CTB008">Error CTB008</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="estadoMatriculatePaymentMethod">Matricular/Actualizar Método de Pago:</label>
+                        <select id="estadoMatriculatePaymentMethod" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="success">Éxito</option>
+                            <option value="CTB007">Error CTB007</option>
+                            <option value="CTB008">Error CTB008</option>
+                        </select>
+                    </div>
                     <button id="guardarConfiguraciones" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Guardar Configuraciones
                     </button>
                 </div>
             </div>
 
+            <!-- Crear Categoría existente -->
             <div class="bg-white shadow-md rounded px-6 py-4">
                 <h2 class="text-xl font-semibold mb-4">Crear Categoría</h2>
                 <div class="space-y-4">
@@ -698,10 +1768,10 @@ app.listen(puerto, () => {
                         <div class="flex items-center space-x-2">
                             <select class="codigoOpcion w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
                                 <option value="4100">Transferencia Bancaria</option>
-                                <option value="TX002">Pago Bancaria</option>
+                                <option value="TX002">Pago Bancario</option>
                                 <option value="TX003">Consulta de Saldo</option>
                                 <option value="TX004">Retiro de Efectivo</option>
-                                <option value="TX005">Depósito Bancaria</option>
+                                <option value="TX005">Depósito Bancario</option>
                                 <option value="TX006">Pago de Préstamos</option>
                                 <option value="TX007">Consulta de Movimientos</option>
                                 <option value="TX008">Recarga de Tarjeta</option>
@@ -719,6 +1789,127 @@ app.listen(puerto, () => {
             </div>
         </div>
 
+        <!-- Sección nueva: Gestionar Customer Plans -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Crear Customer Plan -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Crear Plan de Cliente</h2>
+                <div class="space-y-4">
+                    <input id="planId" type="number" placeholder="ID del Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="chargePercentage" type="number" step="0.01" placeholder="Porcentaje de Cobro" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <select id="statePlan" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-500">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Método de Pago:</label>
+                        <input id="paymentNumber" type="text" placeholder="Número" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="paymentType" type="text" placeholder="Tipo" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="paymentClass" type="text" placeholder="Clase" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <input id="documentType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="documentNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <button id="crearCustomerPlan" class="w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Crear Plan de Cliente
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cambiar Plan de Cliente -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Cambiar Plan de Cliente</h2>
+                <div class="space-y-4">
+                    <input id="currentPlanId" type="number" placeholder="ID del Plan Actual" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="targetPlanId" type="number" placeholder="ID del Nuevo Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nuevo Método de Pago:</label>
+                        <input id="newPaymentNumber" type="text" placeholder="Número" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="newPaymentType" type="text" placeholder="Tipo" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="newPaymentClass" type="text" placeholder="Clase" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <button id="cambiarPlanCliente" class="w-full bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Cambiar Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección nueva: Cambiar Porcentaje de Cobro y Recuperar Planes -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Cambiar Porcentaje de Cobro -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Cambiar Porcentaje de Cobro</h2>
+                <div class="space-y-4">
+                    <input id="chgDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="chgDocNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="chgPlanId" type="number" placeholder="ID del Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="newChargePercentage" type="number" step="0.01" placeholder="Nuevo Porcentaje de Cobro" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <button id="cambiarChargePercentage" class="w-full bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Actualizar Porcentaje
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recuperar Planes de Clientes -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Recuperar Planes de Clientes</h2>
+                <div class="space-y-4">
+                    <input id="retrievePageSize" type="number" placeholder="Tamaño de Página" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrieveLastId" type="number" placeholder="Último ID" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrievePlanId" type="number" placeholder="ID del Plan" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrieveDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="retrieveDocNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <select id="retrieveTypeService" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-500">
+                        <option value="Plan">Plan</option>
+                        <option value="Topping">Topping</option>
+                    </select>
+                    <button id="recuperarPlanes" class="w-full bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Recuperar Planes
+                    </button>
+                </div>
+                <div id="listaCustomerPlans" class="mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Sección nueva: Gestión de Métodos de Pago -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Obtener Método de Pago -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Obtener Método de Pago</h2>
+                <div class="space-y-4">
+                    <input id="getPaymentDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <input id="getPaymentDocNumber" type="text" placeholder="Número de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    <button id="obtenerMetodoPago" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Obtener Método de Pago
+                    </button>
+                </div>
+                <div id="mostrarMetodoPago" class="mt-4"></div>
+            </div>
+
+            <!-- Matricular o Actualizar Método de Pago -->
+            <div class="bg-white shadow-md rounded px-6 py-4">
+                <h2 class="text-xl font-semibold mb-4">Matricular/Actualizar Método de Pago</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Método de Pago:</label>
+                        <input id="matPaymentClass" type="text" placeholder="Clase (CUENTA_DE_AHORRO, CUENTA_CORRIENTE)" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="matPaymentNumber" type="text" placeholder="Número de Cuenta" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="matPaymentType" type="text" placeholder="Tipo (CUENTAS_DEPOSITOS)" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Cliente:</label>
+                        <input id="matCustomerDocType" type="text" placeholder="Tipo de Documento" class="w-full px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                        <input id="matCustomerDocNumber" type="text" placeholder="Número de Documento" class="w-full mt-2 px-3 py-2 placeholder-gray-400 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
+                    </div>
+                    <button id="matricularMetodoPago" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Matricular/Actualizar Método de Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección existente: Listar Categorías -->
         <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
             <h2 class="text-xl font-semibold mb-4">Listar Categorías</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -735,6 +1926,7 @@ app.listen(puerto, () => {
             <div id="listaCategorias" class="mt-4"></div>
         </div>
 
+        <!-- Sección existente: Validar Nombre de Categoría -->
         <div class="mt-8 bg-white shadow-md rounded px-6 py-4">
             <h2 class="text-xl font-semibold mb-4">Validar Nombre de Categoría</h2>
             <div class="flex space-x-4">
@@ -768,7 +1960,14 @@ app.listen(puerto, () => {
     async function guardarConfiguraciones() {
         const configuraciones = {
             '/api/v1/ch-ms-category-management-pricing/create-category': document.getElementById('estadoCrearCategoria').value,
-            '/api/v1/ch-ms-category-management-pricing/categories': document.getElementById('estadoListarCategorias').value
+            '/api/v1/ch-ms-category-management-pricing/categories': document.getElementById('estadoListarCategorias').value,
+            '/api/v1/ch-ms-relation-management-pricing/customer-plan': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/customer-plan-': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/customer-plan-by-document': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage': 'success',
+            '/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan': 'success',
+            '/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method': document.getElementById('estadoGetPaymentMethod').value,
+            '/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method': document.getElementById('estadoMatriculatePaymentMethod').value
         };
         try {
             const response = await fetch('/api/settings', {
@@ -833,7 +2032,7 @@ app.listen(puerto, () => {
         const nombreOpcion = document.getElementById('buscarNombreOpcion').value;
         const ordenarPor = document.getElementById('ordenarPor').value;
         try {
-            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/categories?categoryName=${nombreCategoria}&optionName=${nombreOpcion}&sortBy=${ordenarPor}`);
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/categories?categoryName=${encodeURIComponent(nombreCategoria)}&optionName=${encodeURIComponent(nombreOpcion)}&sortBy=${encodeURIComponent(ordenarPor)}`);
             const result = await response.json();
             
             const listaCategorias = document.getElementById('listaCategorias');
@@ -863,7 +2062,7 @@ app.listen(puerto, () => {
     async function validarNombreCategoria() {
         const nombreCategoria = document.getElementById('validarNombreCategoria').value;
         try {
-            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/validate-category-name?categoryName=${nombreCategoria}`);
+            const response = await fetch(`/api/v1/ch-ms-category-management-pricing/validate-category-name?categoryName=${encodeURIComponent(nombreCategoria)}`);
             const result = await response.json();
             
             if (result.errors) {
@@ -876,14 +2075,285 @@ app.listen(puerto, () => {
         }
     }
 
+    async function crearCustomerPlan() {
+        const planId = parseInt(document.getElementById('planId').value);
+        const chargePercentage = parseFloat(document.getElementById('chargePercentage').value);
+        const state = document.getElementById('statePlan').value;
+        const paymentMethod = {
+            number: document.getElementById('paymentNumber').value,
+            type: document.getElementById('paymentType').value,
+            class: document.getElementById('paymentClass').value
+        };
+        const documentType = document.getElementById('documentType').value;
+        const documentNumber = document.getElementById('documentNumber').value;
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-relation-management-pricing/customer-plan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'document-type': documentType,
+                    'document-number': documentNumber
+                },
+                body: JSON.stringify({
+                    planId,
+                    chargePercentage,
+                    state,
+                    paymentMethod
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success('Plan de cliente creado exitosamente');
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function cambiarPlanCliente() {
+        const currentPlanId = parseInt(document.getElementById('currentPlanId').value);
+        const targetPlanId = parseInt(document.getElementById('targetPlanId').value);
+        const paymentMethod = {
+            number: document.getElementById('newPaymentNumber').value,
+            type: document.getElementById('newPaymentType').value,
+            class: document.getElementById('newPaymentClass').value
+        };
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-relation-management-pricing/customer-plan-', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPlanId,
+                    targetPlanId,
+                    paymentMethod
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success('Plan cambiado exitosamente');
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function cambiarChargePercentage() {
+        const documentType = document.getElementById('chgDocType').value;
+        const documentNumber = document.getElementById('chgDocNumber').value;
+        const currentPlanId = parseInt(document.getElementById('chgPlanId').value);
+        const chargePercentage = parseFloat(document.getElementById('newChargePercentage').value);
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-relation-management-pricing/macd/charge-percentage', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    documentType,
+                    documentNumber,
+                    currentPlanId,
+                    chargePercentage
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                toastr.success(result.meta.message);
+            } else {
+                toastr.error(result.errors[0].message);
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function recuperarPlanes() {
+        const pageSize = document.getElementById('retrievePageSize').value || 10;
+        const lastId = document.getElementById('retrieveLastId').value;
+        const planId = document.getElementById('retrievePlanId').value;
+        const documentType = document.getElementById('retrieveDocType').value;
+        const documentNumber = document.getElementById('retrieveDocNumber').value;
+        const typeService = document.getElementById('retrieveTypeService').value;
+
+        let url = `/api/v1/ch-ms-relation-management-pricing/macd/retrieve-customer-plan?pageSize=${encodeURIComponent(pageSize)}&typeService=${encodeURIComponent(typeService)}`;
+        if (lastId) url += `&lastId=${encodeURIComponent(lastId)}`;
+        if (planId) url += `&planId=${encodeURIComponent(planId)}`;
+        if (documentType) url += `&documentType=${encodeURIComponent(documentType)}`;
+        if (documentNumber) url += `&documentNumber=${encodeURIComponent(documentNumber)}`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'message-id': '1234567890',
+                    'session-tracker': 'abcdef123456',
+                    'channel': 'web',
+                    'transaction-code': '98765',
+                    'request-timestamp': new Date().toISOString(),
+                    'company-name': 'MiEmpresa',
+                    'username': 'user123',
+                    'ip': '192.168.1.1'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                if (errorData.errors && errorData.errors.length > 0) {
+                    toastr.error(errorData.errors[0].message);
+                } else {
+                    toastr.error('Error al recuperar los planes');
+                }
+                return;
+            }
+
+            const result = await response.json();
+
+            const listaCustomerPlans = document.getElementById('listaCustomerPlans');
+            listaCustomerPlans.innerHTML = '';
+
+            if (result.data.length === 0) {
+                listaCustomerPlans.innerHTML = '<p>No se encontraron planes.</p>';
+                return;
+            }
+
+            result.data.forEach(plan => {
+                const planDiv = document.createElement('div');
+                planDiv.className = 'bg-gray-100 p-4 mb-4 rounded';
+                planDiv.innerHTML = `
+                    <h3 class="font-bold">Cliente: ${plan.customerInformation.customerName}</h3>
+                    <p class="text-sm text-gray-600">Documento: ${plan.customerInformation.documentType} - ${plan.customerInformation.documentNumber}</p>
+                    <p class="text-sm">Plan: ${plan.service[0].name}</p>
+                    <p class="text-sm">Estado: ${plan.service[0].state}</p>
+                    <p class="text-sm">Porcentaje de Cobro: ${plan.service[0].chargePercentage}</p>
+                `;
+                listaCustomerPlans.appendChild(planDiv);
+            });
+        } catch (error) {
+            console.error('Error en recuperarPlanes:', error);
+            toastr.error('Error al recuperar los planes');
+        }
+    }
+
+    // ------------------ Nuevas Funciones para Métodos de Pago ------------------
+
+    async function obtenerMetodoPago() {
+        const documentType = document.getElementById('getPaymentDocType').value;
+        const documentNumber = document.getElementById('getPaymentDocNumber').value;
+
+        if (!documentType || !documentNumber) {
+            toastr.warning('Por favor, completa ambos campos de documento.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    documentType,
+                    documentNumber
+                })
+            });
+            const result = await response.json();
+
+            const mostrarMetodoPago = document.getElementById('mostrarMetodoPago');
+            mostrarMetodoPago.innerHTML = '';
+
+            if (response.ok) {
+                mostrarMetodoPago.innerHTML = `
+                    <div class="bg-green-100 p-4 rounded">
+                        <p><strong>Número de Cuenta:</strong> ${result.paymentMethod.number}</p>
+                        <p><strong>Clase:</strong> ${result.paymentMethod.methodClass}</p>
+                        <p><strong>Tipo:</strong> ${result.paymentMethod.type}</p>
+                    </div>
+                `;
+                toastr.success(result.meta.message);
+            } else {
+                if (result.errors && result.errors.length > 0) {
+                    toastr.error(result.errors[0].message);
+                } else {
+                    toastr.error('Error al obtener el método de pago.');
+                }
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    async function matricularMetodoPago() {
+        const methodClass = document.getElementById('matPaymentClass').value;
+        const number = document.getElementById('matPaymentNumber').value;
+        const type = document.getElementById('matPaymentType').value;
+        const documentType = document.getElementById('matCustomerDocType').value;
+        const documentNumber = document.getElementById('matCustomerDocNumber').value;
+
+        if (!methodClass || !number || !type || !documentType || !documentNumber) {
+            toastr.warning('Por favor, completa todos los campos.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    paymentMethod: {
+                        methodClass,
+                        number,
+                        type
+                    },
+                    customer: {
+                        documentType,
+                        documentNumber
+                    }
+                })
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                toastr.success('Método de pago matriculado/actualizado exitosamente.');
+                // Opcional: Limpiar los campos del formulario
+                document.getElementById('matPaymentClass').value = '';
+                document.getElementById('matPaymentNumber').value = '';
+                document.getElementById('matPaymentType').value = '';
+                document.getElementById('matCustomerDocType').value = '';
+                document.getElementById('matCustomerDocNumber').value = '';
+            } else {
+                if (result.errors && result.errors.length > 0) {
+                    toastr.error(result.errors[0].message);
+                } else {
+                    toastr.error('Error al matricular/actualizar el método de pago.');
+                }
+            }
+        } catch (error) {
+            toastr.error('Error de conexión');
+        }
+    }
+
+    // ------------------ Fin Nuevas Funciones para Métodos de Pago ------------------
+
     document.getElementById('guardarConfiguraciones').addEventListener('click', guardarConfiguraciones);
     document.getElementById('crearCategoria').addEventListener('click', crearCategoria);
     document.getElementById('buscarCategorias').addEventListener('click', listarCategorias);
     document.getElementById('validarCategoria').addEventListener('click', validarNombreCategoria);
+    document.getElementById('crearCustomerPlan').addEventListener('click', crearCustomerPlan);
+    document.getElementById('cambiarPlanCliente').addEventListener('click', cambiarPlanCliente);
+    document.getElementById('cambiarChargePercentage').addEventListener('click', cambiarChargePercentage);
+    document.getElementById('recuperarPlanes').addEventListener('click', recuperarPlanes);
+    
+    // Nuevos Event Listeners para Métodos de Pago
+    document.getElementById('obtenerMetodoPago').addEventListener('click', obtenerMetodoPago);
+    document.getElementById('matricularMetodoPago').addEventListener('click', matricularMetodoPago);
 
     fetch('/api/settings').then(response => response.json()).then(configuraciones => {
         document.getElementById('estadoCrearCategoria').value = configuraciones['/api/v1/ch-ms-category-management-pricing/create-category'] || 'success';
         document.getElementById('estadoListarCategorias').value = configuraciones['/api/v1/ch-ms-category-management-pricing/categories'] || 'success';
+        document.getElementById('estadoGetPaymentMethod').value = configuraciones['/api/v1/ch-ms-payment-methods-pricing/macd/get-payment-method'] || 'success';
+        document.getElementById('estadoMatriculatePaymentMethod').value = configuraciones['/api/v1/ch-ms-payment-methods-pricing/macd/matriculate-payment-method'] || 'success';
     });
 
     document.addEventListener('click', function (e) {
@@ -894,10 +2364,10 @@ app.listen(puerto, () => {
             nuevaOpcion.innerHTML = `
                 <select class="codigoOpcion w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-100 focus:border-blue-300">
                     <option value="4100">Transferencia Bancaria</option>
-                    <option value="TX002">Pago Bancaria</option>
+                    <option value="TX002">Pago Bancario</option>
                     <option value="TX003">Consulta de Saldo</option>
                     <option value="TX004">Retiro de Efectivo</option>
-                    <option value="TX005">Depósito Bancaria</option>
+                    <option value="TX005">Depósito Bancario</option>
                     <option value="TX006">Pago de Préstamos</option>
                     <option value="TX007">Consulta de Movimientos</option>
                     <option value="TX008">Recarga de Tarjeta</option>
@@ -910,9 +2380,9 @@ app.listen(puerto, () => {
             opcionesList.appendChild(nuevaOpcion);
         }
     });
-
     </script>
 </body>
 </html>
+<!-- Fin public/dashboard.html -->
 
 /* Fin public\dashboard.html */
