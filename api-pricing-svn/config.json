@@ -1,0 +1,255 @@
+[
+  {
+    "id": 1,
+    "method": "POST",
+    "path": "/api/v1/ch-ms-payment-methods-pricing/get-payment-method",
+    "useMock": true,
+    "responseType": "success",
+    "statusCode": 200,
+    "mockResponses": {
+      "National": {
+        "number": "40670954025",
+        "accountClass": "SVGS",
+        "currencyCode": "COP"
+      },
+      "Filex": {
+        "number": "80700000302",
+        "accountClass": "CAA",
+        "currencyCode": "USD"
+      }
+    },
+    "mockError": {
+      "errors": [
+        {
+          "reason": "Estamos trabajando para mejorar el mensaje por defecto",
+          "domain": "POST:/api/v1/security-filters/payments-leasing/retrieve-conditions-advance-stage",
+          "code": "400",
+          "message": "{\"title\":\"El sistema no se encuentra disponible\",\"description\":\"Nuestro equipo está trabajando para darte una pronta solución.\"}",
+          "type": "ERROR"
+        }
+      ]
+    },
+    "externalUrl": "https://canalnegocios-ext-qa.apps.ambientesbc.com/neg/api/v1/ch-ms-payment-methods-pricing/get-payment-method",
+    "headers": {
+      "message-id": "0e3fb741-0487-450c-89d5-f19d55419b6d",
+      "document-type": "NIT",
+      "document-number": "12240954",
+      "Content-Type": "application/json",
+      "Cookie": "incap_ses_1370_2982627=pFXhbFlYY2DCMIlk8zcDE23HSWcAAAAAY6LS7GiC5ncy4wq31kLxXw==; nlbi_2982627=8M47LQw30BmaCj23MQQJbQAAAABTk8ADK+VIIaelFylGDrqD; visid_incap_2982627=Sw1efLYPRzK5lGqes4N3BW3HSWcAAAAAQUIPAAAAAAAinl3jWDNn3zSMFAV5tzd+"
+    }
+  },
+  {
+    "id": 2,
+    "method": "GET",
+    "path": "/api/v1/ch-ms-relation-management-pricing/customer-service-by-document",
+    "useMock": true,
+    "responseType": "success",
+    "statusCode": 200,
+    "mockResponses": {
+      "Plan Esencial": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 1,
+          "name": "Plan Esencial",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 12,
+          "chargePercentage": 1,
+          "totalFee": 0,
+          "currencyCode": "COP"
+        },
+        "toppings": [
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      },
+      "Plan Plus": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 2,
+          "name": "Plan Plus",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 24,
+          "chargePercentage": 0.8,
+          "totalFee": 10,
+          "currencyCode": "COP"
+        },
+        "toppings": [
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      },
+      "Tooping Filex": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 2,
+          "name": "Plan Plus",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 24,
+          "chargePercentage": 0.8,
+          "totalFee": 10,
+          "currencyCode": "COP"
+        },
+        "toppings": [
+          {
+            "id": 6,
+            "name": "Topping Filex",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 50,
+            "currencyCode": "USD"
+          },
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      },
+      "Plan Filex": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 3,
+          "name": "Plan Filex",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 18,
+          "chargePercentage": 0.9,
+          "totalFee": 20,
+          "currencyCode": "USD"
+        },
+        "toppings": [
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      }
+    },
+    "mockError": {
+      "errors": [
+        {
+          "reason": "Error en el servicio de relación de gestión de precios",
+          "domain": "GET:/api/v1/ch-ms-relation-management-pricing/customer-service-by-document",
+          "code": "500",
+          "message": "{\"title\":\"Servicio no disponible\",\"description\":\"Inténtalo de nuevo más tarde.\"}",
+          "type": "ERROR"
+        }
+      ]
+    },
+    "externalUrl": "https://canalnegocios-ext-qa.apps.ambientesbc.com/neg/api/v1/ch-ms-relation-management-pricing/customer-service-by-document",
+    "headers": {
+      "message-id": "d5d2b7f2-7195-4267-919d-e5523de9b146",
+      "transaction-code": "150",
+      "Company-Name": "company",
+      "Company-Id": "123456",
+      "Doc-Type": "NIT",
+      "User-Id": "user123",
+      "Timestamp": "1732908500",
+      "Ip": "60.31.244.22",
+      "App-Id": "pricing",
+      "App-Module": "Relation-Management",
+      "document-type": "NIT",
+      "document-number": "100000001",
+      "Content-Type": "application/json",
+      "Cookie": "incap_ses_1252_2982627=mNCJZ7uCqEAkRpl4k/9fEdAVSmcAAAAA25KDXezbhQtPJw7m64T7bg==; incap_ses_1490_2981149=+nYZFZwgQnGNa6ryS4utFJPxSWcAAAAAAJgllTqDw7I2A/dCYc1b2g==; incap_ses_1703_2982627=OxLnaNtEDimhuBq7qEWiF1jUSGcAAAAA06Zaq1ji24wQ7tIzZIkDZQ==; incap_ses_9084_2982627=ygUsMRS7YVi4qzWHDdoQfgXUSGcAAAAAALN+WxS/+j/4QEsMIqL/kA==; incap_ses_9207_2982627=+3ewEzOrs1GYM61a69XFf6XrSWcAAAAAvNYhe1rWhpu0NrXeKUPkjw==; nlbi_2981149=4khFUrZ2CSg4z8ZLDq7ADQAAAAC0W9GHkfd40Hlx8ar6WG3s; nlbi_2982627=1JETevq6NXc6KRCbMQQJbQAAAADTWp+8gpqbeSpc3h+hYe2o; visid_incap_2705991=dD/li875Tgmpb2YKywrEBq4txWUAAAAAQUIPAAAAAAAT92wOk2ulVxUjb4Im1l2O; visid_incap_2706009=9IfAGCFWR0KM707mb7VTXEruHmYAAAAAQUIPAAAAAAAC3qoQHaGbzgYMtRhv3Gxe; visid_incap_2981149=mPeXfWBkTNea6MHQwLAxIqZPamUAAAAAQUIPAAAAAABC+CTkDcsOQ2Hz7Prtm44+; visid_incap_2982627=qUj+l03eRfWX4AKmzea/RhpQamUAAAAAQUIPAAAAAADFTfewVJbMuwnOyyUGI1nd"
+    },
+    "selectedPlanType": "Plan Plus"
+  }
+]

@@ -1,0 +1,2305 @@
+
+/* Inicio config.js */
+// Inicialmente, ninguna configuración; todos los endpoints usan consumo real
+const config = {};
+
+module.exports = config;
+
+/* Fin config.js */
+
+/* Inicio config.json */
+[
+  {
+    "id": 1,
+    "method": "POST",
+    "path": "/api/v1/ch-ms-payment-methods-pricing/get-payment-method",
+    "useMock": true,
+    "responseType": "success",
+    "statusCode": 200,
+    "mockResponses": {
+      "National": {
+        "number": "40670954025",
+        "accountClass": "SVGS",
+        "currencyCode": "COP"
+      },
+      "Filex": {
+        "number": "80700000302",
+        "accountClass": "CAA",
+        "currencyCode": "USD"
+      }
+    },
+    "mockError": {
+      "errors": [
+        {
+          "reason": "Estamos trabajando para mejorar el mensaje por defecto",
+          "domain": "POST:/api/v1/security-filters/payments-leasing/retrieve-conditions-advance-stage",
+          "code": "400",
+          "message": "{\"title\":\"El sistema no se encuentra disponible\",\"description\":\"Nuestro equipo está trabajando para darte una pronta solución.\"}",
+          "type": "ERROR"
+        }
+      ]
+    },
+    "externalUrl": "https://canalnegocios-ext-qa.apps.ambientesbc.com/neg/api/v1/ch-ms-payment-methods-pricing/get-payment-method",
+    "headers": {
+      "message-id": "0e3fb741-0487-450c-89d5-f19d55419b6d",
+      "document-type": "NIT",
+      "document-number": "12240954",
+      "Content-Type": "application/json",
+      "Cookie": "incap_ses_1370_2982627=pFXhbFlYY2DCMIlk8zcDE23HSWcAAAAAY6LS7GiC5ncy4wq31kLxXw==; nlbi_2982627=8M47LQw30BmaCj23MQQJbQAAAABTk8ADK+VIIaelFylGDrqD; visid_incap_2982627=Sw1efLYPRzK5lGqes4N3BW3HSWcAAAAAQUIPAAAAAAAinl3jWDNn3zSMFAV5tzd+"
+    }
+  },
+  {
+    "id": 2,
+    "method": "GET",
+    "path": "/api/v1/ch-ms-relation-management-pricing/customer-service-by-document",
+    "useMock": true,
+    "responseType": "success",
+    "statusCode": 200,
+    "mockResponses": {
+      "Plan Esencial": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 1,
+          "name": "Plan Esencial",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 12,
+          "chargePercentage": 1,
+          "totalFee": 0,
+          "currencyCode": "COP"
+        },
+        "toppings": [
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      },
+      "Plan Plus": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 2,
+          "name": "Plan Plus",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 24,
+          "chargePercentage": 0.8,
+          "totalFee": 10,
+          "currencyCode": "COP"
+        },
+        "toppings": [
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      },
+      "Tooping Filex": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 2,
+          "name": "Plan Plus",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 24,
+          "chargePercentage": 0.8,
+          "totalFee": 10,
+          "currencyCode": "COP"
+        },
+        "toppings": [
+          {
+            "id": 6,
+            "name": "Topping Filex",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 50,
+            "currencyCode": "USD"
+          },
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      },
+      "Plan Filex": {
+        "customerInformation": {
+          "documentType": "NIT",
+          "documentNumber": "100000001"
+        },
+        "plan": {
+          "id": 3,
+          "name": "Plan Filex",
+          "state": "Activo",
+          "purchaseDate": "2024-11-28",
+          "activationDate": "2024-11-28",
+          "minimumStay": 18,
+          "chargePercentage": 0.9,
+          "totalFee": 20,
+          "currencyCode": "USD"
+        },
+        "toppings": [
+          {
+            "id": 7,
+            "name": "Topping Premium",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 75,
+            "currencyCode": "COP"
+          },
+          {
+            "id": 8,
+            "name": "Topping Empresarial",
+            "state": "Activo",
+            "purchaseDate": "2024-11-28",
+            "activationDate": "2024-11-28",
+            "minimumStay": 6,
+            "chargePercentage": 1,
+            "totalFee": 90,
+            "currencyCode": "COP"
+          }
+        ]
+      }
+    },
+    "mockError": {
+      "errors": [
+        {
+          "reason": "Error en el servicio de relación de gestión de precios",
+          "domain": "GET:/api/v1/ch-ms-relation-management-pricing/customer-service-by-document",
+          "code": "500",
+          "message": "{\"title\":\"Servicio no disponible\",\"description\":\"Inténtalo de nuevo más tarde.\"}",
+          "type": "ERROR"
+        }
+      ]
+    },
+    "externalUrl": "https://canalnegocios-ext-qa.apps.ambientesbc.com/neg/api/v1/ch-ms-relation-management-pricing/customer-service-by-document",
+    "headers": {
+      "message-id": "d5d2b7f2-7195-4267-919d-e5523de9b146",
+      "transaction-code": "150",
+      "Company-Name": "company",
+      "Company-Id": "123456",
+      "Doc-Type": "NIT",
+      "User-Id": "user123",
+      "Timestamp": "1732908500",
+      "Ip": "60.31.244.22",
+      "App-Id": "pricing",
+      "App-Module": "Relation-Management",
+      "document-type": "NIT",
+      "document-number": "100000001",
+      "Content-Type": "application/json",
+      "Cookie": "incap_ses_1252_2982627=mNCJZ7uCqEAkRpl4k/9fEdAVSmcAAAAA25KDXezbhQtPJw7m64T7bg==; incap_ses_1490_2981149=+nYZFZwgQnGNa6ryS4utFJPxSWcAAAAAAJgllTqDw7I2A/dCYc1b2g==; incap_ses_1703_2982627=OxLnaNtEDimhuBq7qEWiF1jUSGcAAAAA06Zaq1ji24wQ7tIzZIkDZQ==; incap_ses_9084_2982627=ygUsMRS7YVi4qzWHDdoQfgXUSGcAAAAAALN+WxS/+j/4QEsMIqL/kA==; incap_ses_9207_2982627=+3ewEzOrs1GYM61a69XFf6XrSWcAAAAAvNYhe1rWhpu0NrXeKUPkjw==; nlbi_2981149=4khFUrZ2CSg4z8ZLDq7ADQAAAAC0W9GHkfd40Hlx8ar6WG3s; nlbi_2982627=1JETevq6NXc6KRCbMQQJbQAAAADTWp+8gpqbeSpc3h+hYe2o; visid_incap_2705991=dD/li875Tgmpb2YKywrEBq4txWUAAAAAQUIPAAAAAAAT92wOk2ulVxUjb4Im1l2O; visid_incap_2706009=9IfAGCFWR0KM707mb7VTXEruHmYAAAAAQUIPAAAAAAAC3qoQHaGbzgYMtRhv3Gxe; visid_incap_2981149=mPeXfWBkTNea6MHQwLAxIqZPamUAAAAAQUIPAAAAAABC+CTkDcsOQ2Hz7Prtm44+; visid_incap_2982627=qUj+l03eRfWX4AKmzea/RhpQamUAAAAAQUIPAAAAAADFTfewVJbMuwnOyyUGI1nd"
+    },
+    "selectedPlanType": "Plan Plus"
+  }
+]
+/* Fin config.json */
+
+/* Inicio curls.js */
+// curl --location 'https://canalnegocios-ext-qa.apps.ambientesbc.com/neg/api/v1/ch-ms-payment-methods-pricing/get-payment-method' \
+// --header 'message-id: 0e3fb741-0487-450c-89d5-f19d55419b6d' \
+// --header 'document-type: NIT' \
+// --header 'document-number: 12240954' \
+// --header 'Content-Type: application/json' \
+// --header 'Cookie: incap_ses_1370_2982627=pFXhbFlYY2DCMIlk8zcDE4peSmcAAAAAY6LS7GiC5ncy4wq31kLxXw==; nlbi_2982627=e7FmU0w71nDwzEdcMQQJbQAAAADcQGPsJW3DsPrToiVm8h8B; visid_incap_2982627=Sw1efLYPRzK5lGqes4N3BW3HSWcAAAAAQUIPAAAAAAAinl3jWDNn3zSMFAV5tzd+' \
+// --data '{
+//     "serviceName": "Filex"
+// }'
+/* Fin curls.js */
+
+/* Inicio mockData.js */
+// mockData.js
+
+const mockResponses = {
+  National: {
+    "number": "40670954025",
+    "accountClass": "SVGS",
+    "currencyCode": "COP"
+  },
+  Filex: {
+    "number": "80700000302",
+    "accountClass": "CAA",
+    "currencyCode": "USD"
+  }
+};
+
+const mockError = {
+  "errors": [
+    {
+      "reason": "Estamos trabajando para mejorar el mensaje por defecto",
+      "domain": "POST:/api/v1/security-filters/payments-leasing/retrieve-conditions-advance-stage",
+      "code": "400",
+      "message": "{\"title\":\"El sistema no se encuentra disponible\",\"description\":\"Nuestro equipo está trabajando para darte una pronta solución.\"}",
+      "type": "ERROR"
+    }
+  ]
+};
+
+module.exports = { mockResponses, mockError };
+
+/* Fin mockData.js */
+
+/* Inicio public\index.html */
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <title>Configuración de API Dinámica</title>
+  
+  <link rel="stylesheet" href="styles.css">
+  <!-- Fuente de iconos opcional -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Configuración de API Dinámica</h1>
+    </header>
+    
+    <section class="config-list">
+      <div class="section-header">
+        <h2>Endpoints Configurados</h2>
+        <button id="add-config-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Configuración</button>
+      </div>
+      <div class="cards-container" id="config-cards">
+        <!-- Las configuraciones se llenarán aquí dinámicamente como tarjetas -->
+      </div>
+    </section>
+
+    <section class="config-form-section">
+      <h2 id="form-title">Agregar Nueva Configuración</h2>
+      <form id="endpoint-form">
+        <input type="hidden" id="config-id" value="">
+        
+        <div class="form-group">
+          <label for="method">Método:</label>
+          <select id="method" required>
+            <option value="" disabled selected>Selecciona un método</option>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+            <option value="PATCH">PATCH</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="path">Endpoint:</label>
+          <input type="text" id="path" placeholder="/api/ejemplo" required>
+        </div>
+
+        <div class="form-group">
+          <label for="useMock">Usar Datos Mockeados:</label>
+          <select id="useMock" required>
+            <option value="" disabled selected>Selecciona una opción</option>
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+
+        <!-- Grupo de tipo de plan que solo se muestra cuando el método es GET -->
+        <div class="form-group" id="selected-plan-type-group" style="display: none;">
+          <label for="selectedPlanType">Seleccionar Tipo de Plan para Responder:</label>
+          <select id="selectedPlanType" required>
+            <option value="" disabled selected>Selecciona un tipo de plan</option>
+            <option value="Plan Esencial">Plan Esencial</option>
+            <option value="Plan Plus">Plan Plus</option>
+            <option value="Plan Filex">Plan Filex</option>
+            <option value="Tooping Filex">Tooping Filex</option>
+          </select>
+        </div>
+
+        <!-- Tipo de Respuesta que solo se muestra cuando el método no es GET -->
+        <div class="form-group" id="response-type-group">
+          <label for="responseType">Tipo de Respuesta:</label>
+          <select id="responseType" required>
+            <option value="" disabled selected>Selecciona un tipo de respuesta</option>
+            <option value="success">Éxito</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="statusCode">Código de Estado:</label>
+          <input type="number" id="statusCode" value="200" min="100" max="599" required>
+        </div>
+
+        <div class="form-group">
+          <label for="mockResponse">Respuesta Mock (JSON):</label>
+          <textarea id="mockResponse" placeholder='{"key":"value"}'></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="mockError">Error Mock (JSON):</label>
+          <textarea id="mockError" placeholder='{"errors":[{"message":"Error"}]}'></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="externalUrl">URL Externa (si no usa mock):</label>
+          <input type="url" id="externalUrl" placeholder="https://api.externa.com/endpoint">
+        </div>
+
+        <div class="form-group">
+          <label for="headers">Encabezados (JSON):</label>
+          <textarea id="headers" placeholder='{"Content-Type":"application/json"}'></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar Configuración</button>
+          <button type="button" id="cancel-edit-btn" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="test-results-section">
+      <h2>Resultados de las Pruebas</h2>
+      <button id="clear-results-btn" class="btn btn-danger"><i class="fas fa-times"></i> Limpiar Resultados</button>
+      <div id="test-results">
+        <!-- Los resultados de las pruebas se mostrarán aquí -->
+      </div>
+    </section>
+
+    <div class="message" id="message"></div>
+  </div>
+
+  <footer>
+    &copy; 2024 Mi Empresa. Todos los derechos reservados.
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+/* Fin public\index.html */
+
+/* Inicio public\script.js */
+// public/script.js
+
+document.addEventListener('DOMContentLoaded', () => {
+  const configCardsContainer = document.getElementById('config-cards');
+  const endpointForm = document.getElementById('endpoint-form');
+  const messageDiv = document.getElementById('message');
+  const addConfigBtn = document.getElementById('add-config-btn');
+  const cancelEditBtn = document.getElementById('cancel-edit-btn');
+  const formTitle = document.getElementById('form-title');
+  const responseTypeGroup = document.getElementById('response-type-group');
+  const planTypeGroup = document.getElementById('selected-plan-type-group');
+  const testAllBtn = document.getElementById('test-all-btn');
+  const testResultsDiv = document.getElementById('test-results');
+  const clearResultsBtn = document.getElementById('clear-results-btn');
+  const selectedPlanTypeSelect = document.getElementById('selectedPlanType');
+
+  // Función para mostrar mensajes
+  function showMessage(type, text) {
+    messageDiv.classList.remove('success', 'error');
+    messageDiv.classList.add(type);
+    messageDiv.innerText = text;
+    messageDiv.style.display = 'block';
+    setTimeout(() => {
+      messageDiv.style.display = 'none';
+    }, 5000);
+  }
+
+  // Función para crear una tarjeta de configuración
+  function createConfigCard(config) {
+    const card = document.createElement('div');
+    card.classList.add('config-card');
+    card.setAttribute('data-id', config.id);
+
+    card.innerHTML = `
+      <div class="card-header">
+        <h3>ID: ${config.id}</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Método:</label>
+          <select class="card-method" required>
+            <option value="" disabled ${!config.method ? 'selected' : ''}>Selecciona un método</option>
+            <option value="GET" ${config.method === 'GET' ? 'selected' : ''}>GET</option>
+            <option value="POST" ${config.method === 'POST' ? 'selected' : ''}>POST</option>
+            <option value="PUT" ${config.method === 'PUT' ? 'selected' : ''}>PUT</option>
+            <option value="DELETE" ${config.method === 'DELETE' ? 'selected' : ''}>DELETE</option>
+            <option value="PATCH" ${config.method === 'PATCH' ? 'selected' : ''}>PATCH</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Endpoint:</label>
+          <input type="text" class="card-path" value="${config.path}" required>
+        </div>
+
+        <div class="form-group">
+          <label>Usar Datos Mockeados:</label>
+          <select class="card-useMock" required>
+            <option value="" disabled ${typeof config.useMock === 'undefined' ? 'selected' : ''}>Selecciona una opción</option>
+            <option value="true" ${config.useMock ? 'selected' : ''}>Sí</option>
+            <option value="false" ${!config.useMock ? 'selected' : ''}>No</option>
+          </select>
+        </div>
+
+        <div class="form-group card-selected-plan-type-group" style="display: ${config.method.toUpperCase() === 'GET' ? 'block' : 'none'};">
+          <label>Seleccionar Tipo de Plan para Responder:</label>
+          <select class="card-selectedPlanType" ${config.method.toUpperCase() === 'GET' ? 'required' : ''}>
+            <option value="" disabled ${!config.selectedPlanType ? 'selected' : ''}>Selecciona un tipo de plan</option>
+            <option value="Plan Esencial" ${config.selectedPlanType === 'Plan Esencial' ? 'selected' : ''}>Plan Esencial</option>
+            <option value="Plan Plus" ${config.selectedPlanType === 'Plan Plus' ? 'selected' : ''}>Plan Plus</option>
+            <option value="Plan Filex" ${config.selectedPlanType === 'Plan Filex' ? 'selected' : ''}>Plan Filex</option>
+            <option value="Tooping Filex" ${config.selectedPlanType === 'Tooping Filex' ? 'selected' : ''}>Tooping Filex</option>
+          </select>
+        </div>
+
+        <div class="form-group card-response-type-group" style="display: ${config.method.toUpperCase() !== 'GET' ? 'block' : 'none'};">
+          <label>Tipo de Respuesta:</label>
+          <select class="card-responseType" ${config.method.toUpperCase() !== 'GET' ? 'required' : ''}>
+            <option value="" disabled ${!config.responseType ? 'selected' : ''}>Selecciona un tipo de respuesta</option>
+            <option value="success" ${config.responseType === 'success' ? 'selected' : ''}>Éxito</option>
+            <option value="error" ${config.responseType === 'error' ? 'selected' : ''}>Error</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Código de Estado:</label>
+          <input type="number" class="card-statusCode" value="${config.statusCode}" min="100" max="599" required>
+        </div>
+
+        <div class="form-group">
+          <label>Respuesta Mock (JSON):</label>
+          <textarea class="card-mockResponse" placeholder='{"key":"value"}'>${JSON.stringify(config.mockResponses, null, 2)}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Error Mock (JSON):</label>
+          <textarea class="card-mockError" placeholder='{"errors":[{"message":"Error"}]}' >${JSON.stringify(config.mockError, null, 2)}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>URL Externa (si no usa mock):</label>
+          <input type="url" class="card-externalUrl" value="${config.externalUrl || ''}" placeholder="https://api.externa.com/endpoint">
+        </div>
+
+        <div class="form-group">
+          <label>Encabezados (JSON):</label>
+          <textarea class="card-headers" placeholder='{"Content-Type":"application/json"}'>${JSON.stringify(config.headers, null, 2)}</textarea>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-success save-btn"><i class="fas fa-save"></i> Guardar</button>
+        <button class="btn btn-danger delete-btn"><i class="fas fa-trash-alt"></i> Eliminar</button>
+      </div>
+    `;
+
+    // Mostrar u ocultar campos adicionales según el método seleccionado
+    const methodSelect = card.querySelector('.card-method');
+    const selectedPlanTypeGroup = card.querySelector('.card-selected-plan-type-group');
+    const responseTypeGroup = card.querySelector('.card-response-type-group');
+
+    methodSelect.addEventListener('change', (e) => {
+      const method = e.target.value.toLowerCase();
+      if (method === 'get') {
+        selectedPlanTypeGroup.style.display = 'block';
+        responseTypeGroup.style.display = 'none';
+        card.querySelector('.card-selectedPlanType').required = true;
+        card.querySelector('.card-responseType').required = false;
+      } else {
+        selectedPlanTypeGroup.style.display = 'none';
+        responseTypeGroup.style.display = 'block';
+        card.querySelector('.card-selectedPlanType').required = false;
+        card.querySelector('.card-responseType').required = true;
+      }
+    });
+
+    // Manejar el clic en el botón Guardar dentro de la tarjeta
+    const saveBtn = card.querySelector('.save-btn');
+    saveBtn.addEventListener('click', async () => {
+      const id = config.id;
+      const method = card.querySelector('.card-method').value;
+      const path = card.querySelector('.card-path').value.trim();
+      const useMock = card.querySelector('.card-useMock').value === 'true';
+      const responseType = card.querySelector('.card-responseType').value;
+      const statusCode = parseInt(card.querySelector('.card-statusCode').value, 10);
+      const mockResponses = card.querySelector('.card-mockResponse').value.trim();
+      const mockErrorText = card.querySelector('.card-mockError').value.trim();
+      const externalUrl = card.querySelector('.card-externalUrl').value.trim();
+      const headers = card.querySelector('.card-headers').value.trim();
+      const selectedPlanType = card.querySelector('.card-selectedPlanType') ? card.querySelector('.card-selectedPlanType').value.trim() : '';
+
+      // Validar campos obligatorios
+      if (!method || !path || typeof useMock === 'undefined' || !statusCode) {
+        showMessage('error', 'Por favor, completa todos los campos obligatorios.');
+        return;
+      }
+
+      // Si el método es GET y usa mock, 'selectedPlanType' es obligatorio
+      if (method.toUpperCase() === 'GET' && useMock && !selectedPlanType) {
+        showMessage('error', 'Por favor, selecciona un tipo de plan.');
+        return;
+      }
+
+      // Si el método es POST/PUT/DELETE/PATCH y usa mock, 'responseType' es obligatorio
+      if (method.toUpperCase() !== 'GET' && useMock && !responseType) {
+        showMessage('error', 'Por favor, selecciona un tipo de respuesta.');
+        return;
+      }
+
+      // Parsear JSON de mockResponses y mockError
+      let parsedMockResponses = {};
+      let parsedMockError = {};
+      let parsedHeaders = {};
+
+      try {
+        if (mockResponses) {
+          parsedMockResponses = JSON.parse(mockResponses);
+        }
+        if (mockErrorText) {
+          parsedMockError = JSON.parse(mockErrorText);
+        }
+        if (headers) {
+          parsedHeaders = JSON.parse(headers);
+        }
+      } catch (error) {
+        showMessage('error', `Error al parsear JSON: ${error.message}`);
+        return;
+      }
+
+      const configData = {
+        method,
+        path,
+        useMock,
+        statusCode,
+        mockResponses: parsedMockResponses,
+        mockError: parsedMockError,
+        externalUrl,
+        headers: parsedHeaders
+      };
+
+      // Si el método es GET y useMock es true, agregar 'selectedPlanType'
+      if (method.toUpperCase() === 'GET' && useMock) {
+        configData.selectedPlanType = selectedPlanType;
+      } else if (method.toUpperCase() === 'GET' && useMock === false) {
+        configData.selectedPlanType = null; // No se utiliza en solicitudes reales
+      } else {
+        configData.responseType = responseType;
+      }
+
+      try {
+        const response = await fetch(`/api/configurations/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(configData)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          showMessage('success', result.message);
+          loadConfigurations();
+        } else {
+          showMessage('error', `Error: ${result.message}`);
+        }
+      } catch (error) {
+        showMessage('error', `Error al guardar la configuración: ${error.message}`);
+      }
+    });
+
+    // Manejar el clic en el botón Eliminar dentro de la tarjeta
+    const deleteBtn = card.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', async () => {
+      const id = config.id;
+      if (confirm('¿Estás seguro de que deseas eliminar esta configuración?')) {
+        try {
+          const response = await fetch(`/api/configurations/${id}`, {
+            method: 'DELETE'
+          });
+          const result = await response.json();
+          if (response.ok) {
+            showMessage('success', result.message);
+            loadConfigurations();
+          } else {
+            showMessage('error', `Error: ${result.message}`);
+          }
+        } catch (error) {
+          showMessage('error', `Error al eliminar la configuración: ${error.message}`);
+        }
+      }
+    });
+
+    return card;
+  }
+
+  // Función para cargar todas las configuraciones
+  async function loadConfigurations() {
+    configCardsContainer.innerHTML = '';
+    try {
+      const response = await fetch('/api/configurations');
+      const configs = await response.json();
+      configs.forEach(config => {
+        const card = createConfigCard(config);
+        configCardsContainer.appendChild(card);
+      });
+    } catch (error) {
+      showMessage('error', `Error al cargar configuraciones: ${error.message}`);
+    }
+  }
+
+  // Cargar configuraciones al inicio
+  loadConfigurations();
+
+  // Mostrar el formulario para agregar una nueva configuración
+  addConfigBtn.addEventListener('click', () => {
+    endpointForm.reset();
+    document.getElementById('config-id').value = '';
+    formTitle.textContent = 'Agregar Nueva Configuración';
+    cancelEditBtn.style.display = 'none';
+    responseTypeGroup.style.display = 'block';
+    planTypeGroup.style.display = 'none';
+    // Ajustar los atributos required
+    document.getElementById('responseType').required = true;
+    selectedPlanTypeSelect.required = false;
+  });
+
+  // Cancelar la edición
+  cancelEditBtn.addEventListener('click', () => {
+    endpointForm.reset();
+    document.getElementById('config-id').value = '';
+    formTitle.textContent = 'Agregar Nueva Configuración';
+    cancelEditBtn.style.display = 'none';
+    responseTypeGroup.style.display = 'block';
+    planTypeGroup.style.display = 'none';
+    // Ajustar los atributos required
+    document.getElementById('responseType').required = true;
+    selectedPlanTypeSelect.required = false;
+  });
+
+  // Mostrar u ocultar campos adicionales según el método seleccionado en el formulario
+  document.getElementById('method').addEventListener('change', (e) => {
+    const method = e.target.value.toLowerCase();
+    if (method === 'get') {
+      planTypeGroup.style.display = 'block';
+      responseTypeGroup.style.display = 'none';
+      // Establecer required
+      selectedPlanTypeSelect.required = true;
+      document.getElementById('responseType').required = false;
+    } else {
+      planTypeGroup.style.display = 'none';
+      responseTypeGroup.style.display = 'block';
+      // Establecer required
+      selectedPlanTypeSelect.required = false;
+      document.getElementById('responseType').required = true;
+    }
+  });
+
+  // Manejar el envío del formulario para agregar una nueva configuración
+  endpointForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('config-id').value;
+    const method = document.getElementById('method').value;
+    const path = document.getElementById('path').value.trim();
+    const useMock = document.getElementById('useMock').value === 'true';
+    const responseType = document.getElementById('responseType').value;
+    const statusCode = parseInt(document.getElementById('statusCode').value, 10);
+    const mockResponses = document.getElementById('mockResponse').value.trim(); // Ahora es un JSON de múltiples respuestas
+    const mockErrorText = document.getElementById('mockError').value.trim();
+    const externalUrl = document.getElementById('externalUrl').value.trim();
+    const headers = document.getElementById('headers').value.trim();
+    const selectedPlanType = selectedPlanTypeSelect.value.trim();
+
+    // Validar campos obligatorios
+    if (!method || !path || typeof useMock === 'undefined' || !statusCode) {
+      showMessage('error', 'Por favor, completa todos los campos obligatorios.');
+      return;
+    }
+
+    // Si el método es GET y usa mock, 'selectedPlanType' es obligatorio
+    if (method.toUpperCase() === 'GET' && useMock && !selectedPlanType) {
+      showMessage('error', 'Por favor, selecciona un tipo de plan.');
+      return;
+    }
+
+    // Si el método es POST/PUT/DELETE/PATCH y usa mock, 'responseType' es obligatorio
+    if (method.toUpperCase() !== 'GET' && useMock && !responseType) {
+      showMessage('error', 'Por favor, selecciona un tipo de respuesta.');
+      return;
+    }
+
+    // Parsear JSON de mockResponses y mockError
+    let parsedMockResponses = {};
+    let parsedMockError = {};
+    let parsedHeaders = {};
+
+    try {
+      if (mockResponses) {
+        parsedMockResponses = JSON.parse(mockResponses);
+      }
+      if (mockErrorText) {
+        parsedMockError = JSON.parse(mockErrorText);
+      }
+      if (headers) {
+        parsedHeaders = JSON.parse(headers);
+      }
+    } catch (error) {
+      showMessage('error', `Error al parsear JSON: ${error.message}`);
+      return;
+    }
+
+    const configData = {
+      method,
+      path,
+      useMock,
+      statusCode,
+      mockResponses: parsedMockResponses,
+      mockError: parsedMockError,
+      externalUrl,
+      headers: parsedHeaders
+    };
+
+    // Si el método es GET y useMock es true, agregar 'selectedPlanType'
+    if (method.toUpperCase() === 'GET' && useMock) {
+      configData.selectedPlanType = selectedPlanType;
+    } else if (method.toUpperCase() === 'GET' && useMock === false) {
+      configData.selectedPlanType = null; // No se utiliza en solicitudes reales
+    } else {
+      configData.responseType = responseType;
+    }
+
+    try {
+      let response;
+      if (id) {
+        // Actualizar configuración existente
+        response = await fetch(`/api/configurations/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(configData)
+        });
+      } else {
+        // Agregar nueva configuración
+        response = await fetch('/api/configurations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(configData)
+        });
+      }
+
+      const result = await response.json();
+      if (response.ok) {
+        showMessage('success', result.message);
+        endpointForm.reset();
+        document.getElementById('config-id').value = '';
+        formTitle.textContent = 'Agregar Nueva Configuración';
+        cancelEditBtn.style.display = 'none';
+        responseTypeGroup.style.display = 'block';
+        planTypeGroup.style.display = 'none';
+        // Ajustar los atributos required
+        document.getElementById('responseType').required = true;
+        selectedPlanTypeSelect.required = false;
+        loadConfigurations();
+      } else {
+        showMessage('error', `Error: ${result.message}`);
+      }
+    } catch (error) {
+      showMessage('error', `Error al guardar la configuración: ${error.message}`);
+    }
+  });
+
+  // Función para realizar pruebas
+  async function performTest(config, testType, serviceName, planType) {
+    try {
+      const body = {
+        configId: config.id,
+        testType: testType
+      };
+
+      if (testType === 'real' && config.useMock === false) {
+        // Envío del cuerpo real para la prueba real
+        if (serviceName) {
+          body.serviceName = serviceName;
+        }
+        if (planType) {
+          body.planType = planType;
+        }
+      }
+
+      const response = await fetch('/api/test-endpoint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { success: true, data };
+      } else {
+        return { success: false, data };
+      }
+    } catch (error) {
+      return { success: false, data: { message: error.message } };
+    }
+  }
+
+  // Manejar clic en el botón "Test All"
+  testAllBtn.addEventListener('click', async () => {
+    testResultsDiv.innerHTML = '';
+    showMessage('success', 'Iniciando pruebas...');
+
+    try {
+      const response = await fetch('/api/configurations');
+      const configs = await response.json();
+
+      for (const config of configs) {
+        const configDiv = document.createElement('div');
+        configDiv.classList.add('test-result');
+
+        const configHeader = document.createElement('h3');
+        configHeader.textContent = `ID: ${config.id} | Endpoint: ${config.path}`;
+        configDiv.appendChild(configHeader);
+
+        // Prueba Mock Exitoso para cada serviceName o planType
+        if (config.method.toLowerCase() === 'post') {
+          for (const serviceName in config.mockResponses) {
+            const mockSuccessResult = await performTest(config, 'mockSuccess', serviceName);
+            const mockSuccessP = document.createElement('p');
+            mockSuccessP.innerHTML = `<strong>Mock Success (${serviceName}):</strong> <span class="${mockSuccessResult.success ? 'success-text' : 'error-text'}">${JSON.stringify(mockSuccessResult.data)}</span>`;
+            configDiv.appendChild(mockSuccessP);
+
+            // Prueba Mock Error para cada serviceName
+            const mockErrorResult = await performTest(config, 'mockError', serviceName);
+            const mockErrorP = document.createElement('p');
+            mockErrorP.innerHTML = `<strong>Mock Error (${serviceName}):</strong> <span class="${mockErrorResult.success ? 'success-text' : 'error-text'}">${JSON.stringify(mockErrorResult.data)}</span>`;
+            configDiv.appendChild(mockErrorP);
+          }
+        } else if (config.method.toLowerCase() === 'get') {
+          const planType = config.selectedPlanType;
+          if (planType) {
+            const mockSuccessResult = await performTest(config, 'mockSuccess', null, planType);
+            const mockSuccessP = document.createElement('p');
+            mockSuccessP.innerHTML = `<strong>Mock Success (${planType}):</strong> <span class="${mockSuccessResult.success ? 'success-text' : 'error-text'}">${JSON.stringify(mockSuccessResult.data)}</span>`;
+            configDiv.appendChild(mockSuccessP);
+
+            // Prueba Mock Error para el planType
+            const mockErrorResult = await performTest(config, 'mockError', null, planType);
+            const mockErrorP = document.createElement('p');
+            mockErrorP.innerHTML = `<strong>Mock Error (${planType}):</strong> <span class="${mockErrorResult.success ? 'success-text' : 'error-text'}">${JSON.stringify(mockErrorResult.data)}</span>`;
+            configDiv.appendChild(mockErrorP);
+          }
+        }
+
+        // Prueba Real
+        if (config.useMock === false && config.externalUrl) {
+          if (config.method.toLowerCase() === 'post') {
+            for (const serviceName in config.mockResponses) {
+              const realResult = await performTest(config, 'real', serviceName);
+              const realP = document.createElement('p');
+              realP.innerHTML = `<strong>Real Consumption (${serviceName}):</strong> <span class="${realResult.success ? 'success-text' : 'error-text'}">${JSON.stringify(realResult.data)}</span>`;
+              configDiv.appendChild(realP);
+            }
+          } else if (config.method.toLowerCase() === 'get') {
+            const planType = config.selectedPlanType;
+            if (planType) {
+              const realResult = await performTest(config, 'real', null, planType);
+              const realP = document.createElement('p');
+              realP.innerHTML = `<strong>Real Consumption (${planType}):</strong> <span class="${realResult.success ? 'success-text' : 'error-text'}">${JSON.stringify(realResult.data)}</span>`;
+              configDiv.appendChild(realP);
+            }
+          }
+        } else {
+          const realP = document.createElement('p');
+          realP.innerHTML = `<strong>Real Consumption:</strong> <span class="error-text">No configurado</span>`;
+          configDiv.appendChild(realP);
+        }
+
+        testResultsDiv.appendChild(configDiv);
+      }
+
+      showMessage('success', 'Pruebas completadas.');
+    } catch (error) {
+      showMessage('error', `Error al realizar las pruebas: ${error.message}`);
+    }
+  });
+
+  // Manejar clic en el botón "Limpiar Resultados"
+  clearResultsBtn.addEventListener('click', () => {
+    testResultsDiv.innerHTML = '';
+  });
+});
+
+/* Fin public\script.js */
+
+/* Inicio public\styles.css */
+/* public/styles.css */
+
+/* Variables de color para fácil personalización */
+:root {
+  --primary-color: #007BFF;
+  --secondary-color: #6C757D;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --light-bg: #f8f9fa;
+  --dark-text: #343a40;
+  --light-text: #ffffff;
+  --border-color: #dee2e6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--light-bg);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 20px auto;
+  background-color: var(--light-bg);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  color: var(--dark-text);
+  font-size: 2em;
+  margin: 0;
+}
+
+section {
+  margin-bottom: 40px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-header h2 {
+  color: var(--dark-text);
+  margin: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+}
+
+.btn i {
+  margin-right: 5px;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--light-text);
+}
+
+.btn-primary:hover {
+  background-color: #0056b3; /* Darker shade */
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: var(--light-text);
+}
+
+.btn-success:hover {
+  background-color: #218838; /* Darker shade */
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--light-text);
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268; /* Darker shade */
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: var(--light-text);
+}
+
+.btn-danger:hover {
+  background-color: #c82333; /* Darker shade */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+}
+
+table thead {
+  background-color: var(--primary-color);
+  color: var(--light-text);
+}
+
+table th, table td {
+  padding: 12px 15px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+table tbody tr:hover {
+  background-color: #e9ecef;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--dark-text);
+  font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="url"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1em;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="url"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 4px;
+  color: #ffffff;
+  display: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.message.success {
+  background-color: var(--success-color);
+}
+
+.message.error {
+  background-color: var(--danger-color);
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--secondary-color);
+  font-size: 0.9em;
+  border-top: 1px solid var(--border-color);
+  margin-top: 40px;
+}
+
+/* Estilos para la sección de resultados de pruebas */
+
+.test-results-section {
+  margin-bottom: 40px;
+}
+
+.test-results-section h2 {
+  color: var(--dark-text);
+  margin-bottom: 15px;
+}
+
+#test-results {
+  margin-top: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.test-result {
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 0;
+}
+
+.test-result:last-child {
+  border-bottom: none;
+}
+
+.test-result h3 {
+  margin: 0 0 5px 0;
+  color: var(--dark-text);
+}
+
+.test-result p {
+  margin: 3px 0;
+  word-wrap: break-word;
+}
+
+.success-text {
+  color: var(--success-color);
+}
+
+.error-text {
+  color: var(--danger-color);
+}
+
+#clear-results-btn {
+  margin-bottom: 10px;
+}
+
+/* Estilos para las tarjetas de configuración */
+
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.config-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.config-card .card-header {
+  margin-bottom: 15px;
+}
+
+.config-card .card-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.config-card .card-body {
+  flex-grow: 1;
+}
+
+.config-card .card-body .form-group {
+  margin-bottom: 15px;
+}
+
+.config-card .card-body label {
+  margin-bottom: 5px;
+  display: block;
+  color: var(--dark-text);
+  font-weight: bold;
+}
+
+.config-card .card-body input[type="text"],
+.config-card .card-body input[type="url"],
+.config-card .card-body input[type="number"],
+.config-card .card-body select,
+.config-card .card-body textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9em;
+  transition: border-color 0.3s ease;
+}
+
+.config-card .card-body input[type="text"]:focus,
+.config-card .card-body input[type="url"]:focus,
+.config-card .card-body input[type="number"]:focus,
+.config-card .card-body select:focus,
+.config-card .card-body textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.config-card .card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.config-card .card-actions .btn {
+  flex: none;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  #test-results {
+    max-height: 300px;
+  }
+
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .config-card {
+    max-width: 100%;
+  }
+}
+
+/* Fin public\styles.css */
+
+/* Inicio server.js */
+// server.js
+const cors = require("cors");
+const express = require("express");
+const axios = require("axios");
+const path = require("path");
+const fs = require("fs");
+
+const app = express();
+const PORT = 3939;
+
+// Definir una lista de orígenes permitidos
+const whitelist = ["http://localhost:4200", "http://localhost:9000","http://localhost:3939"];
+
+// Configurar CORS con una función para verificar el origen
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (por ejemplo, Postman o CURL)
+    if (!origin) return callback(null, true);
+
+    if (whitelist.indexOf(origin) !== -1) {
+      // El origen está permitido
+      callback(null, true);
+    } else {
+      // El origen no está permitido
+      callback(new Error("CORS no permitido para este origen"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "message-id",
+    "document-type",
+    "document-number",
+    "transaction-code",
+    "Company-Name",
+    "Company-Id",
+    "Doc-Type",
+    "User-Id",
+    "Timestamp",
+    "Ip",
+    "App-Id",
+    "App-Module",
+    "app-version",
+    "application-id",
+    "cache-control",
+    "channel",
+    "cookie",
+    "device-id",
+    "device-info",
+    "origin",
+    "platform-type",
+    "pragma",
+    "priority",
+    "referer",
+    "request-timestamp",
+    "sec-ch-ua",
+    "sec-ch-ua-mobile",
+    "sec-ch-ua-platform",
+    "sec-fetch-dest",
+    "sec-fetch-mode",
+    "sec-fetch-site",
+    "session-tracker",
+    "user-agent",
+    "validate-captcha",
+    "x-dtc",
+    "request-timestamp-rcc",
+    "appid",
+    "companyid",
+    "appmodule",
+    "userid", 
+    // Añade cualquier otro encabezado personalizado que utilices
+  ],
+  credentials: true, // Permitir el envío de credenciales (cookies, Authorization headers, etc.)
+  optionsSuccessStatus: 200,
+};
+
+// Aplicar el middleware de CORS
+app.use(cors(corsOptions));
+
+// Manejar las solicitudes preflight
+app.options("*", cors(corsOptions));
+
+// Usa solo express.json() para parsear JSON
+app.use(express.json());
+
+// Sirve archivos estáticos desde la carpeta 'public'
+app.use(express.static(path.join(__dirname, "public")));
+
+// Ruta absoluta correcta para config.json
+const CONFIG_PATH = path.join(__dirname, "config.json");
+
+// Rutas CRUD para configuraciones
+
+// Ruta para obtener todas las configuraciones
+app.get("/api/configurations", (req, res) => {
+  fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+    if (err) {
+      console.error("Error al leer config.json:", err);
+      return res
+        .status(500)
+        .json({ message: "Error al leer las configuraciones" });
+    }
+    let configs;
+    try {
+      configs = JSON.parse(data);
+      if (!Array.isArray(configs)) {
+        throw new Error("config.json no es un arreglo");
+      }
+    } catch (parseError) {
+      console.error("Error al parsear config.json:", parseError);
+      return res
+        .status(500)
+        .json({ message: "Error al parsear las configuraciones" });
+    }
+    res.json(configs);
+  });
+});
+
+// Ruta para agregar una nueva configuración
+app.post("/api/configurations", (req, res) => {
+  const newConfig = req.body;
+  fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+    if (err) {
+      console.error("Error al leer config.json:", err);
+      return res
+        .status(500)
+        .json({ message: "Error al leer las configuraciones" });
+    }
+    let configs;
+    try {
+      configs = JSON.parse(data);
+      if (!Array.isArray(configs)) {
+        throw new Error("config.json no es un arreglo");
+      }
+    } catch (parseError) {
+      console.error("Error al parsear config.json:", parseError);
+      return res
+        .status(500)
+        .json({ message: "Error al parsear las configuraciones" });
+    }
+
+    newConfig.id = configs.length ? configs[configs.length - 1].id + 1 : 1;
+    configs.push(newConfig);
+
+    fs.writeFile(CONFIG_PATH, JSON.stringify(configs, null, 2), (err) => {
+      if (err) {
+        console.error("Error al escribir config.json:", err);
+        return res
+          .status(500)
+          .json({ message: "Error 1 al guardar la configuración" });
+      }
+      res.json({
+        message: "Configuración agregada exitosamente",
+        config: newConfig,
+      });
+    });
+  });
+});
+
+// Ruta para actualizar una configuración existente
+app.put("/api/configurations/:id", (req, res) => {
+  const configId = parseInt(req.params.id, 10);
+  const updatedConfig = req.body;
+  fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+    if (err) {
+      console.error("Error al leer config.json:", err);
+      return res
+        .status(500)
+        .json({ message: "Error al leer las configuraciones" });
+    }
+    let configs;
+    try {
+      configs = JSON.parse(data);
+      if (!Array.isArray(configs)) {
+        throw new Error("config.json no es un arreglo");
+      }
+    } catch (parseError) {
+      console.error("Error al parsear config.json:", parseError);
+      return res
+        .status(500)
+        .json({ message: "Error al parsear las configuraciones" });
+    }
+
+    const index = configs.findIndex((config) => config.id === configId);
+    if (index === -1) {
+      return res.status(404).json({ message: "Configuración no encontrada" });
+    }
+
+    configs[index] = { ...configs[index], ...updatedConfig };
+
+    fs.writeFile(CONFIG_PATH, JSON.stringify(configs, null, 2), (err) => {
+      if (err) {
+        console.error("Error al escribir config.json:", err);
+        return res
+          .status(500)
+          .json({ message: "Error al actualizar la configuración" });
+      }
+      res.json({
+        message: "Configuración actualizada exitosamente",
+        config: configs[index],
+      });
+    });
+  });
+});
+
+// Ruta para eliminar una configuración
+app.delete("/api/configurations/:id", (req, res) => {
+  const configId = parseInt(req.params.id, 10);
+  fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+    if (err) {
+      console.error("Error al leer config.json:", err);
+      return res
+        .status(500)
+        .json({ message: "Error al leer las configuraciones" });
+    }
+    let configs;
+    try {
+      configs = JSON.parse(data);
+      if (!Array.isArray(configs)) {
+        throw new Error("config.json no es un arreglo");
+      }
+    } catch (parseError) {
+      console.error("Error al parsear config.json:", parseError);
+      return res
+        .status(500)
+        .json({ message: "Error al parsear las configuraciones" });
+    }
+
+    const index = configs.findIndex((config) => config.id === configId);
+    if (index === -1) {
+      return res.status(404).json({ message: "Configuración no encontrada" });
+    }
+
+    const removedConfig = configs.splice(index, 1);
+
+    fs.writeFile(CONFIG_PATH, JSON.stringify(configs, null, 2), (err) => {
+      if (err) {
+        console.error("Error al escribir config.json:", err);
+        return res
+          .status(500)
+          .json({ message: "Error al eliminar la configuración" });
+      }
+      res.json({
+        message: "Configuración eliminada exitosamente",
+        config: removedConfig[0],
+      });
+    });
+  });
+});
+
+// Ruta para probar una configuración específica
+app.post("/api/test-endpoint", async (req, res) => {
+  const { configId, testType, serviceName, planType } = req.body;
+
+  if (!configId || !testType) {
+    return res
+      .status(400)
+      .json({ message: "configId y testType son requeridos" });
+  }
+
+  fs.readFile(CONFIG_PATH, "utf8", async (err, data) => {
+    if (err) {
+      console.error("Error al leer config.json:", err);
+      return res
+        .status(500)
+        .json({ message: "Error al leer las configuraciones" });
+    }
+
+    let configs;
+    try {
+      configs = JSON.parse(data);
+      if (!Array.isArray(configs)) {
+        throw new Error("config.json no es un arreglo");
+      }
+    } catch (parseError) {
+      console.error("Error al parsear config.json:", parseError);
+      return res
+        .status(500)
+        .json({ message: "Error al parsear las configuraciones" });
+    }
+
+    const config = configs.find((c) => c.id === configId);
+    if (!config) {
+      return res.status(404).json({ message: "Configuración no encontrada" });
+    }
+
+    try {
+      if (testType === "mockSuccess") {
+        // Para POST, se usa serviceName; para GET, se usa planType
+        if (config.method.toLowerCase() === "get") {
+          const selectedPlanType = config.selectedPlanType;
+          const response = config.mockResponses[selectedPlanType];
+          if (!response) {
+            return res.status(400).json({
+              message: `No hay respuesta mock definida para planType: ${selectedPlanType}`,
+            });
+          }
+          return res.status(config.statusCode || 200).json(response);
+        } else if (config.method.toLowerCase() === "post") {
+          const response = config.mockResponses[serviceName];
+          if (!response) {
+            return res.status(400).json({
+              message: `No hay respuesta mock definida para serviceName: ${serviceName}`,
+            });
+          }
+          return res.status(config.statusCode || 200).json(response);
+        } else {
+          return res
+            .status(501)
+            .json({ message: "Método HTTP no implementado para mockSuccess" });
+        }
+      } else if (testType === "mockError") {
+        return res.status(config.statusCode || 400).json(config.mockError);
+      } else if (testType === "real") {
+        if (!config.externalUrl) {
+          return res.status(400).json({
+            message: "No hay URL externa configurada para este endpoint",
+          });
+        }
+
+        const headers = { ...config.headers };
+
+        let axiosConfig = {
+          method: config.method.toLowerCase(),
+          url: config.externalUrl,
+          headers: headers,
+        };
+
+        if (config.method.toLowerCase() === "get") {
+          axiosConfig.params = planType ? { planType } : {};
+        } else {
+          axiosConfig.data = req.body;
+        }
+
+        const response = await axios(axiosConfig);
+
+        return res.status(response.status).json(response.data);
+      } else {
+        return res.status(400).json({ message: "Tipo de prueba inválido" });
+      }
+    } catch (error) {
+      console.error(`Error en prueba real: ${error.message}`);
+      if (config.mockError) {
+        return res.status(config.statusCode || 500).json(config.mockError);
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Error al realizar la prueba real" });
+      }
+    }
+  });
+});
+
+// Ruta dinámica para manejar todas las configuraciones
+app.all("*", async (req, res) => {
+  fs.readFile(CONFIG_PATH, "utf8", async (err, data) => {
+    if (err) {
+      console.error("Error al leer config.json:", err);
+      return res
+        .status(500)
+        .json({ message: "Error al leer las configuraciones" });
+    }
+    let configs;
+    try {
+      configs = JSON.parse(data);
+      if (!Array.isArray(configs)) {
+        throw new Error("config.json no es un arreglo");
+      }
+    } catch (parseError) {
+      console.error("Error al parsear config.json:", parseError);
+      return res
+        .status(500)
+        .json({ message: "Error al parsear las configuraciones" });
+    }
+
+    const matchedConfig = configs.find(
+      (config) =>
+        config.path === req.path &&
+        config.method.toLowerCase() === req.method.toLowerCase()
+    );
+
+    if (!matchedConfig) {
+      return res.status(404).json({ message: "Endpoint no encontrado" });
+    }
+
+    if (matchedConfig.useMock) {
+      if (matchedConfig.method.toLowerCase() === "post") {
+        const serviceName = req.body.serviceName;
+        if (!serviceName) {
+          return res.status(400).json({
+            message: "serviceName es requerido en el cuerpo de la solicitud",
+          });
+        }
+
+        const response = matchedConfig.mockResponses[serviceName];
+        if (!response) {
+          return res.status(400).json({
+            message: `No hay respuesta mock definida para serviceName: ${serviceName}`,
+          });
+        }
+
+        return res.status(matchedConfig.statusCode || 200).json(response);
+      } else if (matchedConfig.method.toLowerCase() === "get") {
+        // Para solicitudes GET, usamos 'selectedPlanType' para seleccionar la respuesta mock
+        const selectedPlanType = matchedConfig.selectedPlanType;
+        if (!selectedPlanType) {
+          return res.status(400).json({
+            message: "selectedPlanType no está configurado para este endpoint",
+          });
+        }
+
+        const response = matchedConfig.mockResponses[selectedPlanType];
+        if (!response) {
+          return res.status(400).json({
+            message: `No hay respuesta mock definida para planType: ${selectedPlanType}`,
+          });
+        }
+
+        return res.status(matchedConfig.statusCode || 200).json(response);
+      } else {
+        // Manejar otros métodos HTTP si es necesario
+        return res
+          .status(501)
+          .json({ message: "Método HTTP no implementado para mock" });
+      }
+    } else {
+      try {
+        // Preparar los encabezados para la solicitud real
+        const headers = { ...matchedConfig.headers };
+
+        let axiosConfig = {
+          method: matchedConfig.method.toLowerCase(),
+          url: matchedConfig.externalUrl,
+          headers: headers,
+        };
+
+        if (matchedConfig.method.toLowerCase() === "get") {
+          axiosConfig.params = req.query;
+        } else {
+          axiosConfig.data = req.body;
+        }
+
+        // Realizar la solicitud real
+        const response = await axios(axiosConfig);
+
+        return res.status(response.status).json(response.data);
+      } catch (error) {
+        // Manejar errores y retornar el error mock si está definido
+        console.error(`Error en solicitud real: ${error.message}`);
+        if (matchedConfig.mockError) {
+          return res
+            .status(matchedConfig.statusCode || 500)
+            .json(matchedConfig.mockError);
+        } else {
+          return res.status(500).json({
+            message: "Error en el servidor al realizar la solicitud real",
+          });
+        }
+      }
+    }
+  });
+});
+
+// Iniciar el servidor
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
+
+// /* Inicio server.js */
+// // server.js
+// const cors = require("cors");
+// const express = require("express");
+// const axios = require("axios");
+// const path = require("path");
+// const fs = require("fs");
+
+// const app = express();
+// const PORT = 3939;
+
+// // Configura CORS con el origen específico de tu aplicación Angular
+// const corsOptions = {
+//   origin: "http://localhost:4200", // Origen permitido
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   allowedHeaders: [
+//     "Content-Type",
+//     "Authorization",
+//     "message-id",
+//     "document-type",
+//     "document-number",
+//     "transaction-code",
+//     "Company-Name",
+//     "Company-Id",
+//     "Doc-Type",
+//     "User-Id",
+//     "Timestamp",
+//     "Ip",
+//     "App-Id",
+//     "App-Module",
+//     "app-version",
+//     "application-id",
+//     "cache-control",
+//     "channel",
+//     "cookie",
+//     "device-id",
+//     "device-info",
+//     "origin",
+//     "platform-type",
+//     "pragma",
+//     "priority",
+//     "referer",
+//     "request-timestamp",
+//     "sec-ch-ua",
+//     "sec-ch-ua-mobile",
+//     "sec-ch-ua-platform",
+//     "sec-fetch-dest",
+//     "sec-fetch-mode",
+//     "sec-fetch-site",
+//     "session-tracker",
+//     "user-agent",
+//     "validate-captcha",
+//     "x-dtc",
+//     // Añade cualquier otro encabezado personalizado que utilices
+//   ],
+//   credentials: true, // Mantén esto si necesitas enviar credenciales
+//   optionsSuccessStatus: 200,
+// };
+
+// // Aplica el middleware de CORS
+// app.use(cors(corsOptions));
+
+// // Usa solo express.json() para parsear JSON
+// app.use(express.json());
+
+// // Sirve archivos estáticos desde la carpeta 'public'
+// app.use(express.static(path.join(__dirname, "public")));
+
+// // Maneja las solicitudes preflight
+// app.options("*", cors(corsOptions));
+
+// // Ruta absoluta correcta para config.json
+// const CONFIG_PATH = path.join(__dirname, "config.json");
+
+// // Rutas CRUD para configuraciones
+
+// // Ruta para obtener todas las configuraciones
+// app.get("/api/configurations", (req, res) => {
+//   fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+//     if (err) {
+//       console.error("Error al leer config.json:", err);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al leer las configuraciones" });
+//     }
+//     let configs;
+//     try {
+//       configs = JSON.parse(data);
+//       if (!Array.isArray(configs)) {
+//         throw new Error("config.json no es un arreglo");
+//       }
+//     } catch (parseError) {
+//       console.error("Error al parsear config.json:", parseError);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al parsear las configuraciones" });
+//     }
+//     res.json(configs);
+//   });
+// });
+
+// // Ruta para agregar una nueva configuración
+// app.post("/api/configurations", (req, res) => {
+//   const newConfig = req.body;
+//   fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+//     if (err) {
+//       console.error("Error al leer config.json:", err);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al leer las configuraciones" });
+//     }
+//     let configs;
+//     try {
+//       configs = JSON.parse(data);
+//       if (!Array.isArray(configs)) {
+//         throw new Error("config.json no es un arreglo");
+//       }
+//     } catch (parseError) {
+//       console.error("Error al parsear config.json:", parseError);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al parsear las configuraciones" });
+//     }
+
+//     newConfig.id = configs.length ? configs[configs.length - 1].id + 1 : 1;
+//     configs.push(newConfig);
+
+//     fs.writeFile(CONFIG_PATH, JSON.stringify(configs, null, 2), (err) => {
+//       if (err) {
+//         console.error("Error al escribir config.json:", err);
+//         return res
+//           .status(500)
+//           .json({ message: "Error al guardar la configuración" });
+//       }
+//       res.json({
+//         message: "Configuración agregada exitosamente",
+//         config: newConfig,
+//       });
+//     });
+//   });
+// });
+
+// // Ruta para actualizar una configuración existente
+// app.put("/api/configurations/:id", (req, res) => {
+//   const configId = parseInt(req.params.id, 10);
+//   const updatedConfig = req.body;
+//   fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+//     if (err) {
+//       console.error("Error al leer config.json:", err);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al leer las configuraciones" });
+//     }
+//     let configs;
+//     try {
+//       configs = JSON.parse(data);
+//       if (!Array.isArray(configs)) {
+//         throw new Error("config.json no es un arreglo");
+//       }
+//     } catch (parseError) {
+//       console.error("Error al parsear config.json:", parseError);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al parsear las configuraciones" });
+//     }
+
+//     const index = configs.findIndex((config) => config.id === configId);
+//     if (index === -1) {
+//       return res.status(404).json({ message: "Configuración no encontrada" });
+//     }
+
+//     configs[index] = { ...configs[index], ...updatedConfig };
+
+//     fs.writeFile(CONFIG_PATH, JSON.stringify(configs, null, 2), (err) => {
+//       if (err) {
+//         console.error("Error al escribir config.json:", err);
+//         return res
+//           .status(500)
+//           .json({ message: "Error al actualizar la configuración" });
+//       }
+//       res.json({
+//         message: "Configuración actualizada exitosamente",
+//         config: configs[index],
+//       });
+//     });
+//   });
+// });
+
+// // Ruta para eliminar una configuración
+// app.delete("/api/configurations/:id", (req, res) => {
+//   const configId = parseInt(req.params.id, 10);
+//   fs.readFile(CONFIG_PATH, "utf8", (err, data) => {
+//     if (err) {
+//       console.error("Error al leer config.json:", err);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al leer las configuraciones" });
+//     }
+//     let configs;
+//     try {
+//       configs = JSON.parse(data);
+//       if (!Array.isArray(configs)) {
+//         throw new Error("config.json no es un arreglo");
+//       }
+//     } catch (parseError) {
+//       console.error("Error al parsear config.json:", parseError);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al parsear las configuraciones" });
+//     }
+
+//     const index = configs.findIndex((config) => config.id === configId);
+//     if (index === -1) {
+//       return res.status(404).json({ message: "Configuración no encontrada" });
+//     }
+
+//     const removedConfig = configs.splice(index, 1);
+
+//     fs.writeFile(CONFIG_PATH, JSON.stringify(configs, null, 2), (err) => {
+//       if (err) {
+//         console.error("Error al escribir config.json:", err);
+//         return res
+//           .status(500)
+//           .json({ message: "Error al eliminar la configuración" });
+//       }
+//       res.json({
+//         message: "Configuración eliminada exitosamente",
+//         config: removedConfig[0],
+//       });
+//     });
+//   });
+// });
+
+// // Ruta para probar una configuración específica
+// app.post("/api/test-endpoint", async (req, res) => {
+//   const { configId, testType, serviceName, planType } = req.body;
+
+//   if (!configId || !testType) {
+//     return res
+//       .status(400)
+//       .json({ message: "configId y testType son requeridos" });
+//   }
+
+//   fs.readFile(CONFIG_PATH, "utf8", async (err, data) => {
+//     if (err) {
+//       console.error("Error al leer config.json:", err);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al leer las configuraciones" });
+//     }
+
+//     let configs;
+//     try {
+//       configs = JSON.parse(data);
+//       if (!Array.isArray(configs)) {
+//         throw new Error("config.json no es un arreglo");
+//       }
+//     } catch (parseError) {
+//       console.error("Error al parsear config.json:", parseError);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al parsear las configuraciones" });
+//     }
+
+//     const config = configs.find((c) => c.id === configId);
+//     if (!config) {
+//       return res.status(404).json({ message: "Configuración no encontrada" });
+//     }
+
+//     try {
+//       if (testType === "mockSuccess") {
+//         // Para POST, se usa serviceName; para GET, se usa planType
+//         if (config.method.toLowerCase() === "get") {
+//           const selectedPlanType = config.selectedPlanType;
+//           const response = config.mockResponses[selectedPlanType];
+//           if (!response) {
+//             return res
+//               .status(400)
+//               .json({
+//                 message: `No hay respuesta mock definida para planType: ${selectedPlanType}`,
+//               });
+//           }
+//           return res.status(config.statusCode || 200).json(response);
+//         } else if (config.method.toLowerCase() === "post") {
+//           const response = config.mockResponses[serviceName];
+//           if (!response) {
+//             return res
+//               .status(400)
+//               .json({
+//                 message: `No hay respuesta mock definida para serviceName: ${serviceName}`,
+//               });
+//           }
+//           return res.status(config.statusCode || 200).json(response);
+//         } else {
+//           return res
+//             .status(501)
+//             .json({ message: "Método HTTP no implementado para mockSuccess" });
+//         }
+//       } else if (testType === "mockError") {
+//         return res.status(config.statusCode || 400).json(config.mockError);
+//       } else if (testType === "real") {
+//         if (!config.externalUrl) {
+//           return res
+//             .status(400)
+//             .json({
+//               message: "No hay URL externa configurada para este endpoint",
+//             });
+//         }
+
+//         const headers = { ...config.headers };
+
+//         let axiosConfig = {
+//           method: config.method.toLowerCase(),
+//           url: config.externalUrl,
+//           headers: headers,
+//         };
+
+//         if (config.method.toLowerCase() === "get") {
+//           axiosConfig.params = planType ? { planType } : {};
+//         } else {
+//           axiosConfig.data = req.body;
+//         }
+
+//         const response = await axios(axiosConfig);
+
+//         return res.status(response.status).json(response.data);
+//       } else {
+//         return res.status(400).json({ message: "Tipo de prueba inválido" });
+//       }
+//     } catch (error) {
+//       console.error(`Error en prueba real: ${error.message}`);
+//       if (config.mockError) {
+//         return res.status(config.statusCode || 500).json(config.mockError);
+//       } else {
+//         return res
+//           .status(500)
+//           .json({ message: "Error al realizar la prueba real" });
+//       }
+//     }
+//   });
+// });
+
+// // Ruta dinámica para manejar todas las configuraciones
+// app.all("*", async (req, res) => {
+//   fs.readFile(CONFIG_PATH, "utf8", async (err, data) => {
+//     if (err) {
+//       console.error("Error al leer config.json:", err);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al leer las configuraciones" });
+//     }
+//     let configs;
+//     try {
+//       configs = JSON.parse(data);
+//       if (!Array.isArray(configs)) {
+//         throw new Error("config.json no es un arreglo");
+//       }
+//     } catch (parseError) {
+//       console.error("Error al parsear config.json:", parseError);
+//       return res
+//         .status(500)
+//         .json({ message: "Error al parsear las configuraciones" });
+//     }
+
+//     const matchedConfig = configs.find(
+//       (config) =>
+//         config.path === req.path &&
+//         config.method.toLowerCase() === req.method.toLowerCase()
+//     );
+
+//     if (!matchedConfig) {
+//       return res.status(404).json({ message: "Endpoint no encontrado" });
+//     }
+
+//     if (matchedConfig.useMock) {
+//       if (matchedConfig.method.toLowerCase() === "post") {
+//         const serviceName = req.body.serviceName;
+//         if (!serviceName) {
+//           return res
+//             .status(400)
+//             .json({
+//               message: "serviceName es requerido en el cuerpo de la solicitud",
+//             });
+//         }
+
+//         const response = matchedConfig.mockResponses[serviceName];
+//         if (!response) {
+//           return res
+//             .status(400)
+//             .json({
+//               message: `No hay respuesta mock definida para serviceName: ${serviceName}`,
+//             });
+//         }
+
+//         return res.status(matchedConfig.statusCode || 200).json(response);
+//       } else if (matchedConfig.method.toLowerCase() === "get") {
+//         // Para solicitudes GET, usamos 'selectedPlanType' para seleccionar la respuesta mock
+//         const selectedPlanType = matchedConfig.selectedPlanType;
+//         if (!selectedPlanType) {
+//           return res
+//             .status(400)
+//             .json({
+//               message:
+//                 "selectedPlanType no está configurado para este endpoint",
+//             });
+//         }
+
+//         const response = matchedConfig.mockResponses[selectedPlanType];
+//         if (!response) {
+//           return res
+//             .status(400)
+//             .json({
+//               message: `No hay respuesta mock definida para planType: ${selectedPlanType}`,
+//             });
+//         }
+
+//         return res.status(matchedConfig.statusCode || 200).json(response);
+//       } else {
+//         // Manejar otros métodos HTTP si es necesario
+//         return res
+//           .status(501)
+//           .json({ message: "Método HTTP no implementado para mock" });
+//       }
+//     } else {
+//       try {
+//         // Preparar los encabezados para la solicitud real
+//         const headers = { ...matchedConfig.headers };
+
+//         let axiosConfig = {
+//           method: matchedConfig.method.toLowerCase(),
+//           url: matchedConfig.externalUrl,
+//           headers: headers,
+//         };
+
+//         if (matchedConfig.method.toLowerCase() === "get") {
+//           axiosConfig.params = req.query;
+//         } else {
+//           axiosConfig.data = req.body;
+//         }
+
+//         // Realizar la solicitud real
+//         const response = await axios(axiosConfig);
+
+//         return res.status(response.status).json(response.data);
+//       } catch (error) {
+//         // Manejar errores y retornar el error mock si está definido
+//         console.error(`Error en solicitud real: ${error.message}`);
+//         if (matchedConfig.mockError) {
+//           return res
+//             .status(matchedConfig.statusCode || 500)
+//             .json(matchedConfig.mockError);
+//         } else {
+//           return res
+//             .status(500)
+//             .json({
+//               message: "Error en el servidor al realizar la solicitud real",
+//             });
+//         }
+//       }
+//     }
+//   });
+// });
+
+// // Iniciar el servidor
+// app.listen(PORT, () => {
+//   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+// });
+
+// /* Fin server.js */
+
+/* Fin server.js */

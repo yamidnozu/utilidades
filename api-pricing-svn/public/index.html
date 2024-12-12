@@ -1,0 +1,133 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <title>Configuración de API Dinámica</title>
+  
+  <link rel="stylesheet" href="styles.css">
+  <!-- Fuente de iconos opcional -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Configuración de API Dinámica</h1>
+    </header>
+    
+    <section class="config-list">
+      <div class="section-header">
+        <h2>Endpoints Configurados</h2>
+        <button id="add-config-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Configuración</button>
+      </div>
+      <div class="cards-container" id="config-cards">
+        <!-- Las configuraciones se llenarán aquí dinámicamente como tarjetas -->
+      </div>
+    </section>
+
+    <section class="config-form-section">
+      <h2 id="form-title">Agregar Nueva Configuración</h2>
+      <form id="endpoint-form">
+        <input type="hidden" id="config-id" value="">
+        
+        <div class="form-group">
+          <label for="method">Método:</label>
+          <select id="method" required>
+            <option value="" disabled selected>Selecciona un método</option>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+            <option value="PATCH">PATCH</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="path">Endpoint:</label>
+          <input type="text" id="path" placeholder="/api/ejemplo" required>
+        </div>
+
+        <div class="form-group">
+          <label for="useMock">Usar Datos Mockeados:</label>
+          <select id="useMock" required>
+            <option value="" disabled selected>Selecciona una opción</option>
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+
+        <!-- Grupo de tipo de plan que solo se muestra cuando el método es GET -->
+        <div class="form-group" id="selected-plan-type-group" style="display: none;">
+          <label for="selectedPlanType">Seleccionar Tipo de Plan para Responder:</label>
+          <select id="selectedPlanType" required>
+            <option value="" disabled selected>Selecciona un tipo de plan</option>
+            <option value="Plan Esencial">Plan Esencial</option>
+            <option value="Plan Plus">Plan Plus</option>
+            <option value="Plan Filex">Plan Filex</option>
+            <option value="Tooping Filex">Tooping Filex</option>
+          </select>
+        </div>
+
+        <!-- Tipo de Respuesta que solo se muestra cuando el método no es GET -->
+        <div class="form-group" id="response-type-group">
+          <label for="responseType">Tipo de Respuesta:</label>
+          <select id="responseType" required>
+            <option value="" disabled selected>Selecciona un tipo de respuesta</option>
+            <option value="success">Éxito</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="statusCode">Código de Estado:</label>
+          <input type="number" id="statusCode" value="200" min="100" max="599" required>
+        </div>
+
+        <div class="form-group">
+          <label for="mockResponse">Respuesta Mock (JSON):</label>
+          <textarea id="mockResponse" placeholder='{"key":"value"}'></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="mockError">Error Mock (JSON):</label>
+          <textarea id="mockError" placeholder='{"errors":[{"message":"Error"}]}'></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="externalUrl">URL Externa (si no usa mock):</label>
+          <input type="url" id="externalUrl" placeholder="https://api.externa.com/endpoint">
+        </div>
+
+        <div class="form-group">
+          <label for="headers">Encabezados (JSON):</label>
+          <textarea id="headers" placeholder='{"Content-Type":"application/json"}'></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar Configuración</button>
+          <button type="button" id="cancel-edit-btn" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="test-results-section">
+      <h2>Resultados de las Pruebas</h2>
+      <button id="clear-results-btn" class="btn btn-danger"><i class="fas fa-times"></i> Limpiar Resultados</button>
+      <div id="test-results">
+        <!-- Los resultados de las pruebas se mostrarán aquí -->
+      </div>
+    </section>
+
+    <div class="message" id="message"></div>
+  </div>
+
+  <footer>
+    &copy; 2024 Mi Empresa. Todos los derechos reservados.
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

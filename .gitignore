@@ -1,1 +1,5 @@
 /node_modules
+**/**/node_modules/**
+**/node_modules/**
+api-pricing-svn/node_modules/
+api-pricing-svn/node_modules/**

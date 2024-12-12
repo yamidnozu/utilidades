@@ -59,6 +59,7 @@ app.post("/feature/flags/api/client/features/validate", (req, res) => {
       { name: "mfFinancialLeasing", enabled: true },
       { name: "mfOrderAgreement", enabled: true },
       { name: "descargaCuentaCobroMfLeasing", enabled: false },
+      { name: "mfPricing", enabled: true },
       // { "name": "mfBalances", "enabled": true },
       // { "name": "MNF", "enabled": true },
       // { "name": "mfPaymentHistory", "enabled": true },

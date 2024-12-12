@@ -59,6 +59,36 @@
           "optionName": "Pagos Internacionales"
         }
       ]
+    },
+    {
+      "categoryId": 4,
+      "categoryCode": "CAT004",
+      "categoryName": "Factura",
+      "categoryDescription": "Esta es ",
+      "categoryOptionsCount": 4,
+      "categoryAssignedPlan": null,
+      "optionsList": [
+        {
+          "optionId": 7,
+          "optionCode": "TX002",
+          "optionName": "Pago Bancario"
+        },
+        {
+          "optionId": 8,
+          "optionCode": "TX003",
+          "optionName": "Consulta de Saldo"
+        },
+        {
+          "optionId": 9,
+          "optionCode": "TX005",
+          "optionName": "Depósito Bancario"
+        },
+        {
+          "optionId": 10,
+          "optionCode": "TX016",
+          "optionName": "Pago de Internet"
+        }
+      ]
     }
   ],
   "configuraciones": {
@@ -75,7 +105,7 @@
   "customerPlans": [
     {
       "planId": 1,
-      "chargePercentage": 0.15,
+      "chargePercentage": 0.7,
       "state": "Pendiente",
       "paymentMethod": {
         "number": "001-123456-78",
@@ -103,7 +133,7 @@
     },
     {
       "planId": 3,
-      "chargePercentage": 0.25,
+      "chargePercentage": 80.96,
       "state": "Activo",
       "paymentMethod": {
         "number": "003-112233-44",
@@ -121,8 +151,8 @@
       "documentType": "CC",
       "documentNumber": "1012345678",
       "paymentMethod": {
-        "number": "001-123456-78",
         "methodClass": "CUENTA_DE_AHORRO",
+        "number": "001-123456-78",
         "type": "CUENTAS_DEPOSITOS"
       }
     },
@@ -150,6 +180,33 @@
       "paymentMethod": {
         "number": "003-112233-44",
         "methodClass": "CUENTA_CORRIENTE",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    },
+    {
+      "documentType": "CC",
+      "documentNumber": "1023456789",
+      "paymentMethod": {
+        "methodClass": "CUENTA_DE_AHORRO",
+        "number": "003-112233-45",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    },
+    {
+      "documentType": "CC",
+      "documentNumber": "1023456789",
+      "paymentMethod": {
+        "methodClass": "CUENTA_CORRIENTE",
+        "number": "003-112233-49",
+        "type": "CUENTAS_DEPOSITOS"
+      }
+    },
+    {
+      "documentType": "CC",
+      "documentNumber": "1012345678",
+      "paymentMethod": {
+        "methodClass": "CUENTA_CORRIENTE",
+        "number": "001-123456-80",
         "type": "CUENTAS_DEPOSITOS"
       }
     }

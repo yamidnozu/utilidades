@@ -1,304 +1,158 @@
 # Extensión de Resumen de Proyecto para VSCode: eDev Summary
 
-## Propósito
-Esta extensión para Visual Studio Code está diseñada para crear un archivo consolidado llamado `RESUMEN.txt`. Este archivo contiene un resumen del contenido de múltiples archivos de un proyecto, permitiendo a los desarrolladores obtener una visión general rápida y clara de su código fuente. Cada archivo incluido en el resumen está claramente delimitado por separadores, facilitando la navegación y comprensión del contenido.
+## ✨ Propósito
 
-## Características Principales
+eDev Summary es una extensión para Visual Studio Code que genera un archivo consolidado llamado `RESUMEN.txt`. Este archivo contiene un resumen estructurado y delimitado del contenido de los archivos seleccionados dentro de un proyecto, ideal para:
 
-### 1. Configuración de la Ruta del Proyecto
-- Los usuarios pueden especificar la ruta principal del proyecto que desean resumir.
-- Ejemplo: 
-  ```
-  Ruta del Proyecto: C:/proyectos/mi-aplicacion-web
-  ```
+- Proporcionar contexto rápido a desarrolladores.
+- Preparar insumos para herramientas de IA.
+- Revisar de forma eficiente la estructura y el contenido del proyecto.
 
-### 2. Selección de Carpetas a Resumir
-- Permite a los usuarios seleccionar carpetas específicas (y sus subcarpetas) para incluir en el resumen.
-- Si no se especifican carpetas, el análisis comienza desde la ruta principal configurada.
-- Ejemplo:
-  ```
-  Ruta principal: C:/proyectos/mi-aplicacion-web
-  Carpetas seleccionadas:
-  - C:/proyectos/mi-aplicacion-web/src/components
-  - C:/proyectos/mi-aplicacion-web/src/pages
-  ```
+---
 
-### 3. Exclusión de Directorios
-- Los usuarios pueden configurar directorios específicos para ser excluidos del resumen.
-- Estas exclusiones se aplican dentro de las carpetas seleccionadas o en toda la ruta principal si no se especificaron carpetas.
-- Se ignoran en todos los niveles de profundidad dentro del ámbito de análisis.
-- Ejemplo:
-  ```
-  Directorios excluidos:
-  - node_modules
-  - build
-  - dist
-  - src/components/deprecated
-  ```
+## 🔄 Características Principales
 
-### 4. Exclusión de Archivos
-- Permite especificar archivos individuales o patrones de archivos para excluir del resumen.
-- Ejemplo:
-  ```
-  Archivos excluidos:
-  - config.js
-  - *.test.js
-  - .env
-  ```
+### 1. Configuración Flexible
+![Descripción de la imagen](resources/ext1.png)
 
-### 5. Gestión de Configuraciones
-- Los usuarios pueden crear, guardar y eliminar configuraciones personalizadas.
-- Cada configuración incluye:
-  - Ruta del proyecto
-  - Carpetas seleccionadas para resumir
-  - Directorios excluidos
-  - Archivos excluidos
-- Esto permite cambiar rápidamente entre diferentes configuraciones para distintos proyectos o escenarios de análisis.
-- Ejemplo:
-  ```json
-  {
-    "name": "Proyecto Web Frontend",
-    "directoryPath": "C:/proyectos/mi-aplicacion-web",
-    "allowedDirectories": ["src/components", "src/pages"],
-    "excludedDirectories": ["node_modules", "build"],
-    "excludedFiles": ["*.test.js", "config.js"],
-    "extensions": [".js", ".jsx", ".css"]
-  }
-  ```
+- Especifica la **ruta principal** del proyecto.
+- Define carpetas **permitidas** y **excluidas**.
+- Excluye archivos específicos o patrones de archivos.
 
-### 6. Análisis y Selección de Extensiones de Archivo
-- La extensión analiza y muestra las extensiones de archivo presentes en el ámbito de análisis definido.
-- Muestra las extensiones encontradas como badges visuales.
-- Permite a los usuarios seleccionar qué extensiones de archivo incluir en el resumen final.
-- El análisis respeta todas las configuraciones de inclusión y exclusión establecidas.
-- Ejemplo:
-  ```
-  Extensiones encontradas: 🏷️ .js  🏷️ .jsx  🏷️ .css  🏷️ .html  🏷️ .json
-  Extensiones seleccionadas: ✅ .js  ✅ .jsx  ✅ .css
-  ```
 
-## Proceso de Análisis y Resumen
+---
 
-1. **Determinación del Ámbito de Análisis**:
-   - Si se especifican carpetas permitidas: analiza solo estas carpetas y sus subcarpetas.
-   - Si no se especifican carpetas: analiza desde la ruta principal del proyecto.
+### 2. 📚 Gestión de Configuraciones
 
-2. **Aplicación de Exclusiones**:
-   - Aplica las exclusiones de directorios y archivos configuradas.
-   - Las exclusiones se respetan en todos los niveles de profundidad dentro del ámbito de análisis.
+- Guarda, carga y elimina configuraciones personalizadas.
+- Cambia rápidamente entre diferentes configuraciones.
+- Utiliza valores por defecto para exclusiones comunes.
 
-3. **Análisis Inicial de Extensiones**:
-   - Escanea todos los archivos dentro del ámbito definido.
-   - Identifica y muestra todas las extensiones de archivo encontradas.
+**Directorios excluidos por defecto:**
+- `node_modules`, `.git`, `dist`, `build`, `coverage`, `tmp`
 
-4. **Selección de Extensiones por el Usuario**:
-   - Presenta las extensiones encontradas al usuario.
-   - El usuario selecciona qué extensiones desea incluir en el resumen.
+**Archivos excluidos por defecto:**
+- `.env`, `*.log`, `.DS_Store`, `Thumbs.db`
 
-5. **Generación del Resumen**:
+---
+
+### 3. 🔍 Análisis Dinámico de Extensiones
+
+- Escanea el proyecto y detecta todas las extensiones de archivo.
+- Presenta las extensiones como **badges visuales**.
+- Permite seleccionar extensiones específicas para incluir en el resumen.
+
+**Ejemplo:**
+```
+Extensiones detectadas: 🏷 .js  🏷 .css  🏷 .html
+Extensiones seleccionadas: ✅ .js  ✅ .css
+```
+
+---
+
+### 4. 🔍 Previsualización del Resumen
+
+- Genera una **vista previa** del árbol de archivos y líneas de código antes de crear el resumen.
+- Proporciona un conteo total de líneas incluidas.
+
+**Ejemplo:**
+```
+/* Directorio: src */
+├── 📂 components
+│   ├── Header.js [42]
+│   └── Footer.js [38]
+├── 📂 pages
+│   ├── Home.js [24]
+│   └── About.js [18]
+
+Total de líneas: 122
+```
+
+---
+
+### 5. ⏳ Feedback Visual en Tiempo Real
+
+- Indicadores de progreso al analizar extensiones y previsualizar contenido.
+- Mensajes de error claros para configuraciones incompletas o directorios vacíos.
+
+---
+
+## 🌐 Interfaz Gráfica Intuitiva
+
+La extensión incluye un panel lateral en VSCode para:
+
+- Seleccionar carpetas y archivos.
+- Configurar inclusiones y exclusiones.
+- Generar y previsualizar resúmenes.
+
+**Opciones clave:**
+
+1. Ruta del proyecto.
+2. Carpetas permitidas y excluidas.
+3. Selección de extensiones.
+4. Vista previa del árbol de archivos.
+5. Botones para guardar, generar y eliminar configuraciones.
+
+---
+
+## 📚 Proceso de Análisis y Generación
+
+1. **Escaneo del Proyecto:**
+   - Determina el ámbito basado en carpetas permitidas y excluidas.
+   - Respeta las configuraciones de extensiones seleccionadas.
+
+2. **Generación del Resumen:**
    - Crea el archivo `RESUMEN.txt`.
-   - Incluye solo los archivos con las extensiones seleccionadas por el usuario.
-   - Respeta todas las configuraciones de inclusión y exclusión.
-   - Cada archivo en el resumen está delimitado por separadores claros.
+   - Incluye solo los archivos seleccionados con separadores claros:
 
-## Escenarios de Uso
+```
+/* Inicio src/components/Header.js */
+... contenido del archivo ...
+/* Fin src/components/Header.js */
+```
+
+3. **Copia Automática:**
+   - Copia el contenido del resumen al portapapeles al finalizar.
+
+---
+
+## 📊 Escenarios de Uso
 
 ### Escenario 1: Análisis Completo del Proyecto
 
 **Configuración:**
-- Ruta del proyecto: `C:/proyectos/mi-aplicacion-web`
-- Carpetas permitidas: [vacío]
-- Directorios excluidos: [vacío]
-- Archivos excluidos: [vacío]
+- Ruta del proyecto: `C:/proyectos/frontend`
+- Carpetas permitidas: Ninguna (analiza todo).
+- Exclusiones: Ninguna.
 
-**Comportamiento:**
-- Analiza todos los archivos y carpetas desde la ruta principal.
-- Incluye todas las subcarpetas en el análisis.
+**Resultado:**
+Incluye todos los archivos del proyecto en el resumen.
 
-**Ejemplo de Estructura:**
-```
-C:/proyectos/mi-aplicacion-web
-├── 📁 src/
-│   ├── 📁 components/
-│   │   ├── 📄 Header.js
-│   │   └── 📄 Footer.js
-│   ├── 📁 pages/
-│   │   ├── 📄 Home.js
-│   │   └── 📄 About.js
-│   └── 📁 utils/
-│       └── 📄 helpers.js
-├── 📁 public/
-│   └── 📄 index.html
-└── 📄 package.json
+---
 
-Extensiones encontradas: 🏷️ .js  🏷️ .html  🏷️ .json
-
-Resultado (si se seleccionan todas las extensiones):
-- Incluirá todos los archivos .js, .html, y .json en RESUMEN.txt
-```
-
-### Escenario 2: Análisis Selectivo con Exclusiones
+### Escenario 2: Análisis Selectivo
 
 **Configuración:**
-- Ruta del proyecto: `C:/proyectos/mi-aplicacion-web`
+- Ruta del proyecto: `C:/proyectos/frontend`
 - Carpetas permitidas: `src/components`, `src/pages`
 - Directorios excluidos: `src/components/deprecated`
 - Archivos excluidos: `*.test.js`
 
-**Comportamiento:**
-- Analiza solo las carpetas `components` y `pages` dentro de `src`.
-- Excluye la carpeta `deprecated` dentro de `components`.
-- No incluye archivos de prueba (*.test.js).
+**Resultado:**
+Incluye solo archivos relevantes de las carpetas seleccionadas, excluyendo archivos y carpetas no deseados.
 
-**Ejemplo de Estructura:**
-```
-C:/proyectos/mi-aplicacion-web
-├── 📁 src/
-│   ├── 📁 components/
-│   │   ├── 📁 deprecated/        (excluido)
-│   │   │   └── 📄 OldComponent.js
-│   │   ├── 📄 Header.js
-│   │   ├── 📄 Footer.js
-│   │   └── 📄 Header.test.js     (excluido)
-│   ├── 📁 pages/
-│   │   ├── 📄 Home.js
-│   │   └── 📄 About.js
-│   └── 📁 utils/                 (no analizado)
-│       └── 📄 helpers.js
-└── 📁 public/                    (no analizado)
-    └── 📄 index.html
+---
 
-Extensiones encontradas: 🏷️ .js
+## ⚙ Configuración Avanzada
 
-Resultado (si se selecciona .js):
-- Incluirá Header.js, Footer.js, Home.js, y About.js en RESUMEN.txt
-```
+- **Integración con Webpack:** Configura y empaqueta la extensión con Webpack para un despliegue eficiente.
+- **Soporte Multilenguaje:** Permite cambiar entre diferentes idiomas para la interfaz (Español e Inglés).
+- **Validación de Entrada:** Asegura que las configuraciones sean completas antes de generar el resumen.
 
-### Escenario 3: Análisis con Extensiones Específicas
+---
 
-**Configuración:**
-- Ruta del proyecto: `C:/proyectos/mi-aplicacion-web`
-- Carpetas permitidas: `src`
-- Directorios excluidos: [vacío]
-- Archivos excluidos: [vacío]
+## 🎁 Conclusión
 
-**Comportamiento:**
-- Analiza toda la carpeta `src` y sus subcarpetas.
-- El usuario selecciona solo ciertas extensiones para incluir.
+⚡ eDev Summary transforma la forma en que los desarrolladores obtienen visibilidad de sus proyectos al proporcionar un resumen claro y estructurado, optimizando el tiempo y mejorando la comprensión del código.
 
-**Ejemplo de Estructura:**
-```
-C:/proyectos/mi-aplicacion-web
-├── 📁 src/
-│   ├── 📁 components/
-│   │   ├── 📄 Header.tsx
-│   │   └── 📄 Footer.tsx
-│   ├── 📁 pages/
-│   │   ├── 📄 Home.js
-│   │   └── 📄 About.js
-│   ├── 📁 styles/
-│   │   └── 📄 main.css
-│   └── 📁 utils/
-│       ├── 📄 helpers.ts
-│       └── 📄 types.d.ts
-└── 📁 public/                    (no analizado)
-    └── 📄 index.html
-
-Extensiones encontradas: 🏷️ .tsx  🏷️ .js  🏷️ .css  🏷️ .ts  🏷️ .d.ts
-
-Extensiones seleccionadas por el usuario: ✅ .js  ✅ .ts
-
-Resultado:
-- Incluirá Home.js, About.js, y helpers.ts en RESUMEN.txt
-- No incluirá archivos .tsx, .css, o .d.ts
-```
-
-### Escenario 4: Análisis de Proyecto con Múltiples Tecnologías
-
-**Configuración:**
-- Ruta del proyecto: `C:/proyectos/app-fullstack`
-- Carpetas permitidas: `frontend/src`, `backend/src`
-- Directorios excluidos: `frontend/src/assets`, `backend/src/tests`
-- Archivos excluidos: `*.config.js`
-
-**Comportamiento:**
-- Analiza las carpetas `src` tanto del frontend como del backend.
-- Excluye carpetas de assets y tests.
-- No incluye archivos de configuración.
-
-**Ejemplo de Estructura:**
-```
-C:/proyectos/app-fullstack
-├── 📁 frontend/
-│   └── 📁 src/
-│       ├── 📁 components/
-│       │   ├── 📄 App.js
-│       │   └── 📄 Navbar.js
-│       ├── 📁 pages/
-│       │   └── 📄 Home.js
-│       └── 📁 assets/            (excluido)
-│           └── 📄 logo.svg
-├── 📁 backend/
-│   └── 📁 src/
-│       ├── 📁 routes/
-│       │   └── 📄 api.js
-│       ├── 📁 models/
-│       │   └── 📄 User.js
-│       ├── 📁 tests/             (excluido)
-│       │   └── 📄 api.test.js
-│       └── 📄 server.js
-├── 📄 frontend.config.js         (excluido)
-└── 📄 backend.config.js          (excluido)
-
-Extensiones encontradas: 🏷️ .js  🏷️ .svg
-
-Extensiones seleccionadas por el usuario: ✅ .js
-
-Resultado:
-- Incluirá App.js, Navbar.js, Home.js, api.js, User.js, y server.js en RESUMEN.txt
-- No incluirá archivos de las carpetas assets o tests, ni los archivos de configuración
-```
-
-## Funcionalidades Adicionales
-
-1. **Interfaz Gráfica de Usuario (GUI)**
-   - La extensión proporciona una interfaz web integrada en VSCode para la configuración y gestión.
-   - Ejemplo: Panel lateral con campos para ingresar la ruta del proyecto, seleccionar carpetas, y configurar exclusiones.
-
-2. **Carga Dinámica de Extensiones**
-   - La extensión analiza dinámicamente el proyecto para encontrar todas las extensiones de archivo presentes.
-   - Ejemplo: Al seleccionar una carpeta, automáticamente muestra badges con extensiones como 🏷️ .js, 🏷️ .css, 🏷️ .html, etc.
-
-3. **Valores por Defecto para Exclusiones**
-   - Proporciona listas predefinidas de directorios y archivos comúnmente excluidos.
-   - Ejemplo:
-     ```
-     Directorios excluidos por defecto: node_modules, .git, dist, build
-     Archivos excluidos por defecto: .env, *.log, .DS_Store
-     ```
-
-4. **Persistencia de Configuraciones**
-   - Utiliza la API de configuración de VSCode para guardar y cargar configuraciones entre sesiones.
-   - Ejemplo: El usuario puede guardar múltiples configuraciones con nombres como "Proyecto Frontend", "Proyecto Backend", etc., y cargarlas fácilmente.
-
-5. **Feedback Visual durante el Proceso**
-   - Incluye un loader y mensajes de estado para informar al usuario sobre el progreso de las operaciones.
-   - Ejemplo: Muestra un spinner y el mensaje "Analizando archivos..." mientras escanea el proyecto.
-
-6. **Validación de Entrada**
-   - Realiza validaciones básicas de los campos de entrada para prevenir errores.
-   - Ejemplo: Verifica que se haya seleccionado una configuración antes de ejecutar el resumen y muestra un mensaje de error si no es así.
-
-## Conclusión
-
-Esta extensión de VSCode, eDev Summary, ofrece una manera flexible y potente de crear resúmenes de proyectos, permitiendo a los desarrolladores enfocarse en las partes más relevantes de su código. Con un control granular sobre qué se incluye en el resumen final, la herramienta se adapta a una variedad de estructuras de proyecto y necesidades de análisis.
-
-Características clave:
-- Análisis personalizable basado en carpetas específicas o todo el proyecto.
-- Exclusión de directorios y archivos no deseados.
-- Selección de extensiones de archivo para un resumen más preciso.
-- Capacidad de guardar y reutilizar configuraciones para diferentes escenarios.
-- Interfaz gráfica intuitiva integrada en VSCode.
-- Análisis dinámico de extensiones de archivo presentes en el proyecto.
-
-El resultado es un archivo `RESUMEN.txt` que proporciona una visión general clara y estructurada del código fuente del proyecto, facilitando la comprensión rápida de la estructura y contenido del proyecto para desarrolladores, revisores de código, o cualquier persona que necesite una visión general del código.
+🔸 **Descubre sus ventajas hoy mismo y simplifica tu flujo de trabajo en VSCode.**

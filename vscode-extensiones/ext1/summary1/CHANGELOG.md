@@ -3,64 +3,98 @@
 Todos los cambios notables en la extensión "eDev Summary" serán documentados en este archivo.
 
 El formato está basado en [Keep a Changelog](http://keepachangelog.com/), y este proyecto adhiere a [Semantic Versioning](http://semver.org/).
+
+---
+
+## [4.0.0] - 2024-12-12
+
+### 🔥 Añadido
+- **Vista previa del resumen**: Implementación de una función para previsualizar el árbol de archivos y el conteo total de líneas antes de generar el archivo `RESUMEN.txt`.
+- **Soporte multilenguaje**: Añadido soporte para cambiar entre Español e Inglés en la interfaz gráfica.
+- **Validación de entradas**: Verificación de configuraciones incompletas, con mensajes de error claros.
+- **Carga dinámica de extensiones**: Optimización del análisis para detectar todas las extensiones de archivo presentes y mostrar badges actualizados en tiempo real.
+- **Copiado automático al portapapeles**: El contenido del archivo `RESUMEN.txt` se copia automáticamente al portapapeles al generarse.
+
+### ⚙️ Cambiado
+- **Optimización de la interfaz gráfica**:
+  - Diseño más intuitivo y funcional para gestionar configuraciones.
+  - Uso de un toggle visual para activar/desactivar la opción "Mostrar todas las combinaciones de extensiones".
+  - Mejora de la visualización del árbol de archivos en la vista previa.
+- **Compatibilidad con configuraciones anteriores**:
+  - Soporte extendido para cargar configuraciones que no incluyan campos nuevos como `showAllExtensions`.
+
+### 🐛 Arreglado
+- Solucionado el problema de exclusión en profundidad para directorios y archivos específicos.
+- Resueltos errores menores en el manejo de configuraciones guardadas.
+
+---
+
 ## [3.0.0] - 2024-08-18
 
-### Cambiado
-- Se modifica para uso con webpack
+### 🔧 Cambiado
+- Implementación de Webpack para empaquetar y distribuir la extensión de manera más eficiente.
+
+---
 
 ## [2.0.0] - 2024-08-17
 
-### Añadido
-- Opción para mostrar todas las combinaciones de extensiones de archivo mediante un control toggle switch en la interfaz gráfica.
-- Persistencia de la preferencia del toggle switch en las configuraciones guardadas.
-- Interfaz visual mejorada, con un diseño más alineado y estéticamente agradable.
-- Implementación de un toggle switch en lugar de un checkbox para seleccionar si se muestran todas las combinaciones de extensiones.
-  
-### Cambiado
-- Alineación y estilo visual de los controles en la interfaz gráfica, mejorando la usabilidad.
-- Adaptación para cargar configuraciones anteriores que no incluyan el nuevo campo `showAllExtensions`, asegurando compatibilidad.
+### 🔥 Añadido
+- **Toggle para combinaciones de extensiones**: Nuevo control para mostrar todas las combinaciones de extensiones de archivo en el análisis.
+- **Persistencia de preferencias**: El estado del toggle se guarda en las configuraciones.
+- **Mejora de la interfaz visual**:
+  - Reemplazo de checkbox por toggle switches.
+  - Estilo visual refinado.
 
-### Arreglado
-- Resuelto el problema donde las configuraciones existentes no se cargaban correctamente debido a la ausencia del campo `showAllExtensions`.
+### ⚙️ Cambiado
+- Compatibilidad con configuraciones anteriores sin el campo `showAllExtensions`.
+
+### 🐛 Arreglado
+- Solucionado el error de carga de configuraciones debido a campos faltantes.
+
+---
 
 ## [1.3.0] - 2024-08-17
 
-### Añadido
-- Interfaz gráfica de usuario (GUI) integrada en VSCode para una configuración más fácil.
-- Análisis dinámico de extensiones de archivo presentes en el proyecto.
-- Capacidad para guardar y gestionar múltiples configuraciones.
-- Visualización de extensiones de archivo como badges seleccionables.
+### 🔥 Añadido
+- Interfaz gráfica integrada en VSCode para configurar de manera visual.
+- Visualización dinámica de extensiones detectadas.
+- Gestión de configuraciones múltiples.
 - Funcionalidad para excluir directorios y archivos específicos.
-- Opción para seleccionar carpetas específicas para el análisis.
 
-### Cambiado
-- Mejorada la lógica de generación de resúmenes para mayor eficiencia.
-- Actualizado el formato del archivo RESUMEN.txt para mejor legibilidad.
+### ⚙️ Cambiado
+- Optimización en la generación de resúmenes.
+- Formato del archivo `RESUMEN.txt` mejorado.
 
-### Arreglado
-- Solucionados problemas con la actualización de extensiones y el guardado de configuraciones.
+### 🐛 Arreglado
+- Solucionados problemas relacionados con configuraciones incompletas.
+
+---
 
 ## [1.2.0] - 2024-08-01
 
-### Añadido
-- Lista predeterminada de directorios y archivos comúnmente excluidos.
-- Soporte para patrones glob en la exclusión de archivos.
+### 🔥 Añadido
+- Exclusión predefinida de directorios y archivos comunes.
+- Soporte para patrones glob en exclusión de archivos.
 
-### Mejorado
-- Optimizado el rendimiento para proyectos de gran tamaño.
+### 🛠️ Mejorado
+- Rendimiento optimizado para proyectos grandes.
+
+---
 
 ## [1.1.0] - 2024-07-15
 
-### Añadido
-- Funcionalidad para excluir directorios y archivos específicos.
-- Opción para seleccionar extensiones de archivo a incluir en el resumen.
+### 🔥 Añadido
+- Funcionalidad para excluir directorios y archivos.
+- Selección de extensiones de archivo para el resumen.
 
-### Cambiado
-- Ajustada la forma en que se toma y genera el resumen para mejor precisión.
+### ⚙️ Cambiado
+- Generación de resúmenes más precisa.
+
+---
 
 ## [1.0.0] - 2024-07-01
 
-### Añadido
+### 🚀 Añadido
 - Lanzamiento inicial de eDev Summary.
-- Funcionalidad básica para generar resúmenes de proyectos.
-- Soporte para configurar la ruta del proyecto.
+- Generación básica de resúmenes de proyectos.
+- Configuración de la ruta del proyecto.
